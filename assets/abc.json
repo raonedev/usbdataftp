@@ -1,0 +1,38 @@
+{
+	"active_camera": 5,
+	"unactive_camera": 1,
+	"cpu_usage": 95,
+	"storage_usage": 65,
+	"total_storage": 512,
+	"hard_disk": [
+		{
+			"name": "Disk 1",
+			"status": "healthy"
+		},
+		{
+			"name": "Disk 2",
+			"status": "healthy"
+		}
+	],
+	"ram_usuage": 40,
+	"total_ram": 8,
+	"vms_version": "2.1.5",
+	"recording_status": [
+		{
+			"name": "camera 1",
+			"status": true
+		},
+		{
+			"name": "camera 2",
+			"status": false
+		},
+		{
+			"name": "camera 3",
+			"status": true
+		},
+		{
+			"name": "camera 4",
+			"status": false
+		}
+	]
+}
