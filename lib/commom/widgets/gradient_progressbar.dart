@@ -8,7 +8,7 @@ class GradientProgressBar extends StatelessWidget {
   const GradientProgressBar({
     super.key,
     required this.value,
-    this.height = 10.0,
+    this.height = 4.0,
     this.borderRadius = const BorderRadius.all(Radius.circular(16)),
   });
 

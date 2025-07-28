@@ -7,11 +7,11 @@
 	"hard_disk": [
 		{
 			"name": "Disk 1",
-			"status": "healthy"
+			"status": "Healthy"
 		},
 		{
 			"name": "Disk 2",
-			"status": "healthy"
+			"status": "Healthy"
 		}
 	],
 	"ram_usuage": 40,
@@ -19,7 +19,7 @@
 	"vms_version": "2.1.5",
 	"recording_status": [
 		{
-			"name": "camera 1",
+			"name": "camera 1 ",
 			"status": true
 		},
 		{

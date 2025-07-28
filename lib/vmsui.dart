@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:usbdataftptest/commom/widgets/gradient_progressbar.dart';
+import 'package:usbdataftptest/features/login/presentation/provider/login_provider.dart';
 import 'package:usbdataftptest/helper.dart';
 import 'package:usbdataftptest/providers/ftpconnection_provider.dart';
 
@@ -19,7 +20,8 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<FtpConnectionProvider>().poolingToKnowUSBStatus();
+      // context.read<FtpConnectionProvider>().poolingToKnowUSBStatus(context: context);
+      context.read<FtpConnectionProvider>().checkingTempData();
     });
   }
 
@@ -34,32 +36,35 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
     final ftpConnectionProvider = context.watch<FtpConnectionProvider>();
     return Scaffold(
       backgroundColor: Color(0xFFF5F5F5),
-      appBar: AppBar(
-        title: Text("Dashboard ${context.watch<FtpConnectionProvider>().count}"),
-        centerTitle: true,
-        elevation: 0,
-        backgroundColor: Colors.white,
-        actions: [
-          IconButton(
-            onPressed: () {
-              context.read<FtpConnectionProvider>().poolingToKnowUSBStatus();
-              // showCustomAlertDialog(
-              //   context,
-              //   title: "USB Tethering Not Enabled",
-              //   message:
-              //       "To continue, please:\n\n1. Connect your phone to the system using a USB cable.\n2. Open settings and enable USB Tethering under 'Hotspot & Tethering'.",
-              //   confirmText: "Open Settings",
-              //   onConfirm: () async {
-              //     context
-              //         .read<FtpConnectionProvider>()
-              //         .poolingToKnowUSBStatus();
-              //   },
-              // );
-            },
-            icon: Icon(Icons.refresh_rounded),
-          ),
-        ],
-      ),
+      // appBar: AppBar(
+      //   title: Text(
+      //     "Dashboard ${context.watch<FtpConnectionProvider>().count}",
+      //   ),
+      //   centerTitle: true,
+      //   elevation: 0,
+      //   backgroundColor: Colors.white,
+      //   actions: [
+      //     IconButton(
+      //       onPressed: () {
+      //         // context.read<FtpConnectionProvider>().poolingToKnowUSBStatus();
+      //         context.read<FtpConnectionProvider>().checkingTempData();
+      //         // showCustomAlertDialog(
+      //         //   context,
+      //         //   title: "USB Tethering Not Enabled",
+      //         //   message:
+      //         //       "To continue, please:\n\n1. Connect your phone to the system using a USB cable.\n2. Open settings and enable USB Tethering under 'Hotspot & Tethering'.",
+      //         //   confirmText: "Open Settings",
+      //         //   onConfirm: () async {
+      //         //     context
+      //         //         .read<FtpConnectionProvider>()
+      //         //         .poolingToKnowUSBStatus();
+      //         //   },
+      //         // );
+      //       },
+      //       icon: Icon(Icons.refresh_rounded),
+      //     ),
+      //   ],
+      // ),
       body: Consumer<FtpConnectionProvider>(
         builder: (context, value, child) {
           if (value.isDialogVisible) {
@@ -77,7 +82,8 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
                       "To continue, please:\n\n1. Connect your phone to the system using a USB cable.\n2. Open settings and enable **USB Tethering** under 'Hotspot & Tethering'.",
                   confirmText: "Open Settings",
                   onConfirm: () async {
-                    final ftpConnectionProvider = context.read<FtpConnectionProvider>();
+                    final ftpConnectionProvider = context
+                        .read<FtpConnectionProvider>();
                     await openUsbTetherSettings();
                     ftpConnectionProvider.isDialogVisible = false;
                   },
@@ -87,13 +93,352 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
                 _hasShownDialog = false;
                 value.isDialogVisible = false;
               });
+            }else{
+              if (Navigator.canPop(context)) {
+                  Navigator.pop(context); // Close previous if any
+                }
+
             }
           }
           return child!;
         },
-        child:  context.watch<FtpConnectionProvider>().filedata == null
+        child: context.watch<FtpConnectionProvider>().filedata == null
             ? Center(child: CupertinoActivityIndicator(color: Colors.black))
-            : SingleChildScrollView(
+            : Stack(
+              children: [
+                /// MAIN BODY
+                SafeArea(
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: double.infinity,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Wrap(
+                          spacing: 8,
+                          children: [
+                            ///active camera
+                            SizedBox(
+                              height: 110,
+                              width: 180,
+                              child: Card(
+                                color: Colors.white,
+                                elevation: 0,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        "Active\nCamera's",
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 20,
+                                        ),
+                                      ),
+                                      Text(
+                                        ftpConnectionProvider
+                                            .filedata!
+                                            .activeCamera
+                                            .toString(),
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 32,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                                  
+                            /// inactive camera
+                            SizedBox(
+                              height: 110,
+                              width: 180,
+                              child: Card(
+                                color: Colors.white,
+                                elevation: 0,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        "In-Active\nCamera's",
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 20,
+                                        ),
+                                      ),
+                                      Text(
+                                        ftpConnectionProvider
+                                            .filedata!
+                                            .unActiveCamera
+                                            .toString(),
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 32,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                                  
+                            /// cpu health
+                            SizedBox(
+                              height: 110,
+                              width: 180,
+                              child: Card(
+                                color: Colors.white,
+                                elevation: 0,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Column(
+                                    children: [
+                                      TitleWidget(title: "CPU Health"),
+                                      Spacer(),
+                                      SubTitleWeidget(
+                                        subtitle: "CPU Usage",
+                                        trailingText:
+                                            "${ftpConnectionProvider.filedata!.cpuUsage} %",
+                                      ),
+                                      const SizedBox(height: 4),
+                                      GradientProgressBar(
+                                        value:
+                                            ftpConnectionProvider
+                                                .filedata!
+                                                .cpuUsage /
+                                            100,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                                  
+                            /// storage usage - RAM usage
+                            Column(
+                              children: [
+                                SizedBox(
+                                  height: 100,
+                                  width: 180,
+                                  child: Card(
+                                    color: Colors.white,
+                                    elevation: 0,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16.0),
+                                      child: Column(
+                                        children: [
+                                          TitleWidget(title: "Storage Usage"),
+                                          Spacer(),
+                                          SubTitleWeidget(
+                                            subtitle:
+                                                "Total:${ftpConnectionProvider.filedata!.totalStorage.toStringAsFixed(0)}GB",
+                                            trailingText:
+                                                "${ftpConnectionProvider.filedata!.storageUsage}%",
+                                          ),
+                                          const SizedBox(height: 4),
+                                          GradientProgressBar(
+                                            value:
+                                                ftpConnectionProvider
+                                                    .filedata!
+                                                    .storageUsage /
+                                                100,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                  
+                                SizedBox(
+                                  height: 100,
+                                  width: 180,
+                                  child: Card(
+                                    color: Colors.white,
+                                    elevation: 0,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16.0),
+                                      child: Column(
+                                        children: [
+                                          TitleWidget(title: "RAM Usage"),
+                                          Spacer(),
+                                          SubTitleWeidget(
+                                            subtitle:
+                                                "Total RAM ${ftpConnectionProvider.filedata!.totalRam.toStringAsFixed(0)}GB",
+                                            trailingText:
+                                                "${ftpConnectionProvider.filedata!.ramUsage}%",
+                                          ),
+                                           const SizedBox(height: 4),
+                                          GradientProgressBar(
+                                            value:
+                                                ftpConnectionProvider
+                                                    .filedata!
+                                                    .ramUsage /
+                                                100,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                                  
+                            /// hardDisk
+                            SizedBox(
+                              width: 180,
+                              height: 200,
+                              child: Card(
+                                color: Colors.white,
+                                elevation: 0,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Column(
+                                    children: [
+                                      TitleWidget(title: "Hard Disk Health"),
+                                      const SizedBox(height: 4),
+                                      Expanded(
+                                        child: ListView.builder(
+                                          itemCount: ftpConnectionProvider
+                                              .filedata!
+                                              .hardDisks
+                                              .length,
+                                          itemBuilder: (context, index) {
+                                            return Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    Text(
+                                                      ftpConnectionProvider
+                                                          .filedata!
+                                                          .hardDisks[index]
+                                                          .name,
+                                                    ),
+                                                    Text(
+                                                      ftpConnectionProvider
+                                                          .filedata!
+                                                          .hardDisks[index]
+                                                          .status,
+                                                      style: TextStyle(
+                                                        color:
+                                                            ftpConnectionProvider
+                                                                    .filedata!
+                                                                    .hardDisks[index]
+                                                                    .status ==
+                                                                'Healthy'
+                                                            ? Colors.green
+                                                            : Colors.black,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 14,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                CustomDevider(),
+                                              ],
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                                  
+                            /// cameras
+                            SizedBox(
+                              width: 180,
+                              height: 200,
+                              child: Card(
+                                color: Colors.white,
+                                elevation: 0,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Column(
+                                    children: [
+                                      TitleWidget(title: "Recording Status"),
+                                      const SizedBox(height: 4),
+                                      Expanded(
+                                        child: ListView.builder(
+                                          itemCount: ftpConnectionProvider
+                                              .filedata!
+                                              .recordingStatuses
+                                              .length,
+                                          itemBuilder: (context, index) {
+                                            return Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.spaceBetween,
+                                                  children: [
+                                                    Text(
+                                                      ftpConnectionProvider
+                                                          .filedata!
+                                                          .recordingStatuses[index]
+                                                          .name,
+                                                    ),
+                                                    Text(
+                                                      ftpConnectionProvider
+                                                              .filedata!
+                                                              .recordingStatuses[index]
+                                                              .status
+                                                          ? "Recording"
+                                                          : "Not Recording",
+                                                      style: TextStyle(
+                                                        color:
+                                                            ftpConnectionProvider
+                                                                .filedata!
+                                                                .recordingStatuses[index]
+                                                                .status
+                                                            ? Colors.black
+                                                            : Colors.red,
+                                                        fontSize: 10,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                  
+                                                CustomDevider(),
+                                              ],
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                /// VMS version
+                Positioned(
+                  bottom: 10,
+                  right: 10,
+                  child: Text("VMS version : ${ftpConnectionProvider.filedata!.vmsVersion}"),
+                ),
+              ],
+            ),
+        /* : SingleChildScrollView(
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
                   child: Column(
@@ -338,6 +683,8 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
                   ),
                 ),
               ),
+
+              */
       ),
     );
   }
@@ -349,8 +696,8 @@ class CustomDevider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Divider(
-      color: Colors.white,
-      thickness: 3,
+      color: Color(0xFFF5F5F5),
+      thickness: 2,
       radius: BorderRadius.circular(8),
     );
   }
@@ -367,18 +714,12 @@ class SubTitleWeidget extends StatelessWidget {
   final String trailingText;
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        children: [
-          Text(subtitle, style: TextStyle(color: Colors.black, fontSize: 18)),
-          Spacer(),
-          Text(
-            trailingText,
-            style: TextStyle(color: Colors.black, fontSize: 18),
-          ),
-        ],
-      ),
+    return Row(
+      children: [
+        Text(subtitle, style: TextStyle(color: Colors.black, fontSize: 14)),
+        Spacer(),
+        Text(trailingText, style: TextStyle(color: Colors.black, fontSize: 14)),
+      ],
     );
   }
 }
@@ -389,15 +730,12 @@ class TitleWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Text(
-        title,
-        style: TextStyle(
-          color: Colors.black,
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
-        ),
+    return Text(
+      title,
+      style: TextStyle(
+        color: Colors.black,
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
       ),
     );
   }

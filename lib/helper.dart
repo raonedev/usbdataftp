@@ -7,6 +7,7 @@ import 'package:android_intent_plus/android_intent.dart';
 import 'package:android_intent_plus/flag.dart';
 import 'package:dart_ping/dart_ping.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ftpconnect/ftpconnect.dart';
 import 'package:path_provider/path_provider.dart';
@@ -64,12 +65,12 @@ Future<void> showCustomAlertDialog(
 Future<void> openUsbTetherSettings() async {
   try {
     const intent = AndroidIntent(
-    action: 'android.settings.TETHER_SETTINGS',
-    flags: <int>[Flag.FLAG_ACTIVITY_NEW_TASK],
-  );
-  await intent.launch();
+      action: 'android.settings.TETHER_SETTINGS',
+      flags: <int>[Flag.FLAG_ACTIVITY_NEW_TASK],
+    );
+    await intent.launch();
   } catch (e) {
-    log("Exception",error: e);
+    log("Exception", error: e);
   }
 }
 
@@ -85,35 +86,35 @@ Future<String?> getTetheringMobileIP() async {
   }
 }
 
+// Function to ping a single IP
+Future<String?> pingSingleIp(String ip) async {
+  final ping = Ping(ip, count: 1, timeout: 1);
+  try {
+    await for (final PingData data in ping.stream) {
+      if (data.response != null) {
+        log(
+          '✅ Host $ip responded: time=${data.response!.time?.inMilliseconds}ms',
+        );
+        return ip;
+      } else if (data.error != null) {
+        log('❌ $ip error: ${data.error}');
+      }
+    }
+    log('❌ No ping response from $ip');
+
+    return null;
+  } catch (e) {
+    log('❌ $ip error: $e');
+    return null;
+  }
+}
+
 Future<String?> findPcIpByPingSubnet(String androidIp) async {
   final parts = androidIp.split('.');
   if (parts.length != 4) return null;
 
   final subnet = '${parts[0]}.${parts[1]}.${parts[2]}';
   const batchSize = 10;
-
-  // Function to ping a single IP
-  Future<String?> pingSingleIp(String ip) async {
-    final ping = Ping(ip, count: 1, timeout: 1);
-    try {
-      await for (final PingData data in ping.stream) {
-        if (data.response != null) {
-          log(
-            '✅ Host $ip responded: time=${data.response!.time?.inMilliseconds}ms',
-          );
-          return ip;
-        } else if (data.error != null) {
-          log('❌ $ip error: ${data.error}');
-        }
-      }
-      log('❌ No ping response from $ip');
-
-      return null;
-    } catch (e) {
-      log('❌ $ip error: $e');
-      return null;
-    }
-  }
 
   // Process IPs in batches
   for (int i = 1; i <= 255; i += batchSize) {
@@ -183,9 +184,10 @@ Future<String?> getFileByMakingFTPConnection({required String hostIp}) async {
   }
 }
 
-
-
-Stream<Map<String, dynamic>?> getFtpFileStream({required String hostIp}) async* {
+Stream<Map<String, dynamic>?> getFtpFileStream({
+  required String hostIp,
+  required BuildContext context,
+}) async* {
   final ftpConnect = FTPConnect(
     hostIp,
     user: 'myuser',
@@ -197,6 +199,9 @@ Stream<Map<String, dynamic>?> getFtpFileStream({required String hostIp}) async* 
   try {
     await ftpConnect.connect();
     log("Connected to FTP server");
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Connected to FTP server')));
 
     final dir = await getTemporaryDirectory();
     final filePath = '${dir.path}/abc.json';
@@ -232,6 +237,9 @@ Stream<Map<String, dynamic>?> getFtpFileStream({required String hostIp}) async* 
     }
   } catch (e, s) {
     log("Exception while connecting FTP", error: e, stackTrace: s);
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(e.toString())));
     yield null;
   }
 }

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:usbdataftptest/core/apptheme.dart';
+import 'package:usbdataftptest/features/login/presentation/provider/login_provider.dart';
+import 'package:usbdataftptest/features/login/presentation/screens/login.dart';
 import 'package:usbdataftptest/providers/ftpconnection_provider.dart';
-import 'package:usbdataftptest/vmsui.dart';
 
 void main() {
   runApp(const MyApp());
@@ -12,19 +14,28 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-      ),
-      home: MultiProvider(
-        providers: [
-          ChangeNotifierProvider<FtpConnectionProvider>(
-            create: (_) => FtpConnectionProvider(),
-          ),
-        ],
-        child: const DashBoardScreen(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<FtpConnectionProvider>(
+          create: (_) => FtpConnectionProvider(),
+        ),
+        ChangeNotifierProvider<LoginProvider>(create: (_) => LoginProvider()),
+      ],
+      child: MaterialApp(
+        title: 'Flutter Demo',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeConfig.lightTheme,
+        darkTheme: ThemeConfig.darkTheme,
+        themeMode: ThemeMode.system,
+        builder: (context, child) {
+          return MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: TextScaler.linear(1)),
+            child: child!,
+          );
+        },
+        home: const LoginScreen(),
       ),
     );
   }

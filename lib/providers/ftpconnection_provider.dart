@@ -33,15 +33,15 @@ class FtpConnectionProvider extends ChangeNotifier {
 
   final Map<String, String> _ipCache = {};
 
-  Future<void> poolingToKnowUSBStatus() async {
+  Future<void> poolingToKnowUSBStatus({required BuildContext context}) async {
     _tetheringTimer = Timer.periodic(Duration(seconds: 5), (timer) {
       _count++;
-      connectingWithFTPServerAndGetData();
+      connectingWithFTPServerAndGetData(context: context);
     });
-    connectingWithFTPServerAndGetData();
+    connectingWithFTPServerAndGetData(context: context);
   }
 
-  Future<void> connectingWithFTPServerAndGetData() async {
+  Future<void> connectingWithFTPServerAndGetData({required BuildContext context}) async {
     if (_isChecking) return;
     _isChecking = true;
     notifyListeners();
@@ -62,6 +62,9 @@ class FtpConnectionProvider extends ChangeNotifier {
       }
 
       log("Tethering IP Found: $_mobileTetheringIP");
+       ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Tethering IP Found: $_mobileTetheringIP"))
+    );
 
       // Continue with initialization once tethering is available
       log("Tethering IP Found: $_mobileTetheringIP");
@@ -71,6 +74,9 @@ class FtpConnectionProvider extends ChangeNotifier {
         _deviceIp = _ipCache[_mobileTetheringIP];
         log("Found IP in cache: $_deviceIp");
       } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("finding device ip"))
+    );
         _deviceIp = await findPcIpByPingSubnet(_mobileTetheringIP!);
         if (_deviceIp != null) {
           _ipCache[_mobileTetheringIP!] = _deviceIp!;
@@ -80,7 +86,10 @@ class FtpConnectionProvider extends ChangeNotifier {
       await _ftpSub?.cancel();
       _ftpSub = null;
       if (_deviceIp != null) {
-        _ftpSub = getFtpFileStream(hostIp: _deviceIp!).listen((jsonData) {
+         ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("device ip found $_deviceIp"))
+    );
+        _ftpSub = getFtpFileStream(hostIp: _deviceIp!,context: context).listen((jsonData) {
           if (jsonData != null) {
             // log("Received JSON: $jsonData");
             _fileData = DashboardModel.fromMap(jsonData);
