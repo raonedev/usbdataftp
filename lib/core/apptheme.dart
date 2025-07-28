@@ -36,25 +36,22 @@ class ThemeConfig {
       contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       border: _outlineInputBorder,
       enabledBorder: _outlineInputBorder,
-      focusedBorder: _outlineInputBorder,
+      focusedBorder: _outlineInputBorder.copyWith(
+        borderSide: const BorderSide(color: Colors.black, width: 1),
+      ),
       errorBorder: _outlineInputBorder.copyWith(
         borderSide: const BorderSide(color: Colors.red, width: 1),
       ),
 
-      hintStyle: TextStyle(
-        color: Colors.grey,
-        fontSize: 12
-      ),
+      hintStyle: TextStyle(color: Colors.grey, fontSize: 12),
     ),
     cardTheme: const CardThemeData(
       color: Colors.white,
       elevation: 8,
-      margin: EdgeInsets.symmetric( vertical: 8),
+      margin: EdgeInsets.symmetric(vertical: 8),
       shadowColor: Colors.white12,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(
-          Radius.circular(16),
-        ),
+        borderRadius: BorderRadius.all(Radius.circular(16)),
         // side: BorderSide(
         //   color: Color(0xFFE0E0E0),
         //   width: 1,

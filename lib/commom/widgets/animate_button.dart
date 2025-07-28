@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 
 class AnimatedTurnOnButton extends StatefulWidget {
@@ -9,26 +10,28 @@ class AnimatedTurnOnButton extends StatefulWidget {
 }
 
 class _AnimatedTurnOnButtonState extends State<AnimatedTurnOnButton>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+    with TickerProviderStateMixin {
+  late AnimationController _scaleController;
   late Animation<double> _scaleAnim;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+
+    _scaleController = AnimationController(
       vsync: this,
       duration: Duration(milliseconds: 1000),
     )..repeat(reverse: true);
 
     _scaleAnim = Tween<double>(begin: 1.0, end: 1.1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+      CurvedAnimation(parent: _scaleController, curve: Curves.easeInOut),
     );
+
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _scaleController.dispose();
     super.dispose();
   }
 
@@ -36,22 +39,27 @@ class _AnimatedTurnOnButtonState extends State<AnimatedTurnOnButton>
   Widget build(BuildContext context) {
     return ScaleTransition(
       scale: _scaleAnim,
-      child: TextButton(
-        onPressed: widget.onPressed,
-        style: TextButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          backgroundColor: Colors.black12,
-        ),
-        child: Text(
-          "Turn on",
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                fontWeight: FontWeight.bold,
+      child: GestureDetector(
+            onTap: widget.onPressed,
+            child: Container(
+              padding: EdgeInsets.all(12), // space for border
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                gradient: LinearGradient(colors: [
+                  Colors.blue,
+                  Colors.purple,
+                ])
               ),
-        ),
-      ),
+              child: Text(
+                "Turn on",
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+              ),
+            ),
+          ),
     );
   }
 }
+

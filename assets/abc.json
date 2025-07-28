@@ -35,6 +35,12 @@
       "status": "Healthy",
       "total_gb": 256,
       "used_gb": 172
+    },
+	{
+      "name": "Disk 3",
+      "status": "UnHealthy",
+      "total_gb": 256,
+      "used_gb":230
     }
   ],
   "storage_distribution": {
