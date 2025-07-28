@@ -5,6 +5,7 @@ import 'package:usbdataftptest/commom/widgets/my_elevatedbutton.dart';
 import 'package:usbdataftptest/features/login/presentation/provider/login_provider.dart';
 import 'package:usbdataftptest/helper.dart';
 
+import '../../../../commom/widgets/animate_button.dart';
 import '../../../../vmsui.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -24,20 +25,6 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final loginProvider = Provider.of<LoginProvider>(context);
-    // Listen to loginState only
-    final loginState = context.select<LoginProvider, LoginState>(
-      (provider) => provider.loginState,
-    );
-
-    // Navigate after build completes
-    if (loginState == LoginState.loginSucess) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => DashBoardScreen()),
-        );
-      });
-    }
     return Scaffold(
       resizeToAvoidBottomInset: true,
       body: SafeArea(
@@ -135,7 +122,7 @@ class PortraitView extends StatelessWidget {
                                 color: Colors.red,
                               ),
                         title: Text(
-                          "Device detect",
+                          "Find Device",
                           style: Theme.of(context).textTheme.labelLarge,
                         ),
                         indicatorColor: loginProvider.isDeviceTethering
@@ -147,15 +134,23 @@ class PortraitView extends StatelessWidget {
                       ),
                       const Expanded(child: Divider()),
                       CustomSteps(
-                        indicator: loginProvider.isFTPConnected
+                        indicator:
+                            loginProvider.ftpConnectionState ==
+                                FtpConnectionState.sucess
                             ? const Icon(Icons.check, size: 12)
+                            : loginProvider.ftpConnectionState ==
+                                  FtpConnectionState.loading
+                            ? const CupertinoActivityIndicator(
+                                radius: 6,
+                                color: Colors.black,
+                              )
                             : const Icon(
                                 Icons.error_rounded,
                                 size: 12,
                                 color: Colors.red,
                               ),
                         title: Text(
-                          "FTP",
+                          "Fetch Data",
                           style: Theme.of(context).textTheme.labelLarge,
                         ),
                         indicatorColor: loginProvider.isFTPConnected
@@ -167,37 +162,49 @@ class PortraitView extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   if (!loginProvider.isUsbTethering)
                     Row(
                       children: [
                         Expanded(
-                          child: Text(
-                            'Step 1: Connect android with device via USB\nStep 2: Enable Usb Tethering by Click on "Turn on" button\nStep 3: Find USB Tethering and TURN ON',
-                            style: Theme.of(context).textTheme.labelSmall
-                                ?.copyWith(color: Colors.black54),
+                          child: RichText(
+                            text: TextSpan(
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(color: Colors.black54),
+                              children: [
+                                TextSpan(text: 'Step 1: Connect your '),
+                                TextSpan(
+                                  text: 'Android',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                TextSpan(text: ' to this system via'),
+                                TextSpan(
+                                  text: ' USB cable.\n',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                TextSpan(text: 'Step 2: Click on '),
+                                TextSpan(
+                                  text: '"Turn on"',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                TextSpan(text: ' button\n'),
+                                TextSpan(text: 'Step 3: Find '),
+                                TextSpan(
+                                  text: 'USB Tethering',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                TextSpan(text: ' and switch it '),
+                                TextSpan(
+                                  text: 'ON',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                         const SizedBox(width: 16),
-                        TextButton(
-                          onPressed: () {
-                            openUsbTetherSettings();
-                          },
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 4,
-                              horizontal: 6,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            backgroundColor: Colors.grey[100],
-                          ),
-                          child: Text(
-                            "Turn on",
-                            style: Theme.of(context).textTheme.labelLarge
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                          ),
+                        AnimatedTurnOnButton(
+                          onPressed: () => openUsbTetherSettings(),
                         ),
                       ],
                     ),
@@ -249,13 +256,35 @@ class PortraitView extends StatelessWidget {
                     height: 45,
                     onPressed: loginProvider.loginState == LoginState.loading
                         ? null
-                        : () {
+                        : () async {
+                            // await loginProvider.loginSubmit();
+                            // if (loginProvider.loginState ==
+                            //     LoginState.loginSucess) {
+                            //   if (!context.mounted) return;
+                            //   Navigator.pushReplacement(
+                            //     context,
+                            //     MaterialPageRoute(
+                            //       builder: (_) => DashBoardScreen(),
+                            //     ),
+                            //   );
+                            // }
+
                             if (!loginProvider.isFTPConnected) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text("FTP is not connected")),
                               );
                             } else {
-                              loginProvider.loginSubmit();
+                              await loginProvider.loginSubmit();
+                              if (loginProvider.loginState ==
+                                  LoginState.loginSucess) {
+                                if (!context.mounted) return;
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => DashBoardScreen(),
+                                  ),
+                                );
+                              }
                             }
                           },
                     gradient: LinearGradient(
@@ -281,6 +310,14 @@ class PortraitView extends StatelessWidget {
                           ),
                   ),
                   const SizedBox(height: 8),
+                  if (loginProvider.loginState == LoginState.loginFailed &&
+                      loginProvider.loginErrorMessage != null)
+                    Text(
+                      loginProvider.loginErrorMessage!,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: Colors.red),
+                    ),
                 ],
               ),
             ),
@@ -344,7 +381,7 @@ class LandScapeView extends StatelessWidget {
                       height: 45,
                       onPressed: loginProvider.loginState == LoginState.loading
                           ? null
-                          : () {
+                          : () async {
                               if (!loginProvider.isFTPConnected) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
@@ -352,7 +389,17 @@ class LandScapeView extends StatelessWidget {
                                   ),
                                 );
                               } else {
-                                loginProvider.loginSubmit();
+                                await loginProvider.loginSubmit();
+                                if (loginProvider.loginState ==
+                                    LoginState.loginSucess) {
+                                  if (!context.mounted) return;
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => DashBoardScreen(),
+                                    ),
+                                  );
+                                }
                               }
                             },
                       gradient: LinearGradient(
@@ -383,32 +430,54 @@ class LandScapeView extends StatelessWidget {
                       Row(
                         children: [
                           Expanded(
-                            child: Text(
-                              'Step 1: Connect android with device via USB\nStep 2: Enable Usb Tethering by Click on "Turn on" button\nStep 3: Find USB Tethering and TURN ON',
-                              style: Theme.of(context).textTheme.labelSmall
-                                  ?.copyWith(color: Colors.black54),
+                            child: RichText(
+                              text: TextSpan(
+                                style: Theme.of(context).textTheme.labelSmall
+                                    ?.copyWith(color: Colors.black54),
+                                children: [
+                                  TextSpan(text: 'Step 1: Connect your '),
+                                  TextSpan(
+                                    text: 'Android',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  TextSpan(text: ' to this system via'),
+                                  TextSpan(
+                                    text: ' USB cable.\n',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  TextSpan(text: 'Step 2: Click on '),
+                                  TextSpan(
+                                    text: '"Turn on"',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  TextSpan(text: ' button\n'),
+                                  TextSpan(text: 'Step 3: Find '),
+                                  TextSpan(
+                                    text: 'USB Tethering',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  TextSpan(text: ' and switch it '),
+                                  TextSpan(
+                                    text: 'ON',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                           const SizedBox(width: 16),
-                          TextButton(
-                            onPressed: () {
-                              openUsbTetherSettings();
-                            },
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 4,
-                                horizontal: 6,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              backgroundColor: Colors.black12,
-                            ),
-                            child: Text(
-                              "Turn on",
-                              style: Theme.of(context).textTheme.labelLarge
-                                  ?.copyWith(fontWeight: FontWeight.bold),
-                            ),
+                          AnimatedTurnOnButton(
+                            onPressed: () => openUsbTetherSettings(),
                           ),
                         ],
                       ),
@@ -524,7 +593,7 @@ class CustomVerticalSteps extends StatelessWidget {
                   )
                 : const Icon(Icons.error_rounded, size: 12, color: Colors.red),
             title: Text(
-              "Device detect",
+              "Find Device",
               style: Theme.of(context).textTheme.labelLarge,
             ),
             indicatorColor: loginProvider.isDeviceTethering
@@ -539,10 +608,19 @@ class CustomVerticalSteps extends StatelessWidget {
             child: VerticalDivider(thickness: 2, color: Colors.grey),
           ),
           CustomSteps(
-            indicator: loginProvider.isFTPConnected
+            indicator:
+                loginProvider.ftpConnectionState == FtpConnectionState.sucess
                 ? const Icon(Icons.check, size: 12)
+                : loginProvider.ftpConnectionState == FtpConnectionState.loading
+                ? const CupertinoActivityIndicator(
+                    radius: 6,
+                    color: Colors.black,
+                  )
                 : const Icon(Icons.error_rounded, size: 12, color: Colors.red),
-            title: Text("FTP", style: Theme.of(context).textTheme.labelLarge),
+            title: Text(
+              "Fetch Data",
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
             indicatorColor: loginProvider.isFTPConnected
                 ? Colors.green
                 : Colors.white,
