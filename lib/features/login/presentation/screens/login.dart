@@ -258,35 +258,35 @@ class PortraitView extends StatelessWidget {
                     onPressed: loginProvider.loginState == LoginState.loading
                         ? null
                         : () async {
-                            await loginProvider.loginSubmit();
-                            if (loginProvider.loginState ==
-                                LoginState.loginSucess) {
-                              if (!context.mounted) return;
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => DashBoardScreen(),
-                                ),
-                              );
-                            }
-
-                            // if (!loginProvider.isFTPConnected) {
-                            //   ScaffoldMessenger.of(context).showSnackBar(
-                            //     SnackBar(content: Text("FTP is not connected")),
+                            // await loginProvider.loginSubmit();
+                            // if (loginProvider.loginState ==
+                            //     LoginState.loginSucess) {
+                            //   if (!context.mounted) return;
+                            //   Navigator.pushReplacement(
+                            //     context,
+                            //     MaterialPageRoute(
+                            //       builder: (_) => DashBoardScreen(),
+                            //     ),
                             //   );
-                            // } else {
-                            //   await loginProvider.loginSubmit();
-                            //   if (loginProvider.loginState ==
-                            //       LoginState.loginSucess) {
-                            //     if (!context.mounted) return;
-                            //     Navigator.pushReplacement(
-                            //       context,
-                            //       MaterialPageRoute(
-                            //         builder: (_) => DashBoardScreen(),
-                            //       ),
-                            //     );
-                            //   }
                             // }
+
+                            if (!loginProvider.isFTPConnected) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("FTP is not connected")),
+                              );
+                            } else {
+                              await loginProvider.loginSubmit();
+                              if (loginProvider.loginState ==
+                                  LoginState.loginSucess) {
+                                if (!context.mounted) return;
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => DashBoardScreen(),
+                                  ),
+                                );
+                              }
+                            }
                           },
                     gradient: LinearGradient(
                       colors: [Colors.blue, Colors.purple],

@@ -136,7 +136,6 @@ class LoginProvider extends ChangeNotifier {
                 // Start listening to FTP file stream
                 _ftpSub = getFtpFileStreamData(ftpConnect: _ftpConnect!).listen(
                   (jsonData) async {
-                    dev.log(jsonData.toString());
                     if (jsonData == null) {
                       // JSON file disappeared or became invalid — restart logic
                       dev.log("Null JSON received from FTP, restarting...");
@@ -146,6 +145,10 @@ class LoginProvider extends ChangeNotifier {
                       notifyListeners();
                       // Retry safely without recursion
                       Future.microtask(() => initialized());
+                    } else {
+                      _fileData = DashboardModel.fromMap(jsonData);
+                      notifyListeners();
+                      dev.log("data found");
                     }
                   },
                 );
