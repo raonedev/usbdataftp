@@ -4,8 +4,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'commom/widgets/gradient_progressbar.dart';
 import 'features/login/presentation/provider/login_provider.dart';
-import 'helper.dart';
-import 'providers/ftpconnection_provider.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
 class DashBoardScreen extends StatefulWidget {
@@ -23,19 +21,18 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<FtpConnectionProvider>().checkingTempData();
+      context.read<LoginProvider>().checkingTempData();
     });
   }
 
   @override
   void dispose() {
-    context.read<FtpConnectionProvider>().dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final ftpConnectionProvider = context.watch<FtpConnectionProvider>();
+    final loginProvider = context.watch<LoginProvider>();
 
     return Scaffold(
       backgroundColor: Color(0xFFF5F5F5),
@@ -66,8 +63,8 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
         child: IndexedStack(
           index: _selectedIndex,
           children: [
-            HomeScreen(ftpConnectionProvider: ftpConnectionProvider),
-            Center(child: Text("File manager")),
+            HomeScreen(loginProvider: loginProvider),
+            Center(child: Text("Recordings")),
             Center(child: Text("Setting screen")),
           ],
         ),
@@ -85,7 +82,7 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(
             icon: Icon(Icons.file_present_rounded),
-            label: 'File',
+            label: 'Recordings',
           ),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Setting'),
         ],
@@ -94,826 +91,268 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
   }
 }
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key, required this.ftpConnectionProvider});
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key, required this.loginProvider});
 
-  final FtpConnectionProvider ftpConnectionProvider;
+  final LoginProvider loginProvider;
 
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  bool _hasShownDialog = false;
   @override
   Widget build(BuildContext context) {
-    return Consumer<FtpConnectionProvider>(
-      builder: (context, value, child) {
-        if (value.isDialogVisible) {
-          if (value.isDialogVisible && !_hasShownDialog) {
-            _hasShownDialog = true;
-            WidgetsBinding.instance.addPostFrameCallback((_) async {
-              if (Navigator.canPop(context)) {
-                Navigator.pop(context); // Close previous if any
-              }
-
-              await showCustomAlertDialog(
-                context,
-                title: "USB Tethering Not Enabled",
-                message:
-                    "To continue, please:\n\n1. Connect your phone to the system using a USB cable.\n2. Open settings and enable **USB Tethering** under 'Hotspot & Tethering'.",
-                confirmText: "Open Settings",
-                onConfirm: () async {
-                  final ftpConnectionProvider = context
-                      .read<FtpConnectionProvider>();
-                  await openUsbTetherSettings();
-                  ftpConnectionProvider.isDialogVisible = false;
-                },
-              );
-
-              // After dialog dismissed, reset flag and provider state
-              _hasShownDialog = false;
-              value.isDialogVisible = false;
-            });
-          } else {
-            if (Navigator.canPop(context)) {
-              Navigator.pop(context); // Close previous if any
-            }
-          }
-        }
-        return child!;
-      },
-      child: context.watch<FtpConnectionProvider>().filedata == null
-          ? Center(child: CupertinoActivityIndicator(color: Colors.black))
-          : SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: SingleChildScrollView(
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: Wrap(
-                      spacing: 8,
-                      runSpacing: 2,
-                      children: [
-                        /// Active Cameras
-                        SizedBox(
-                          height: 110,
-                          width: 180,
-                          child: Card(
-                            color: Colors.white,
-                            elevation: 0,
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    "Active\nCameras",
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 20,
-                                    ),
+    return context.watch<LoginProvider>().filedata == null
+        ? Center(child: CupertinoActivityIndicator(color: Colors.black))
+        : SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: SingleChildScrollView(
+                child: SizedBox(
+                  width: double.infinity,
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 2,
+                    children: [
+                      /// Active Cameras
+                      SizedBox(
+                        height: 110,
+                        width: 180,
+                        child: Card(
+                          color: Colors.white,
+                          elevation: 0,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  "Active\nCameras",
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 20,
                                   ),
-                                  Text(
-                                    widget
-                                        .ftpConnectionProvider
-                                        .filedata!
-                                        .activeCamera
-                                        .toString(),
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 32,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                ),
+                                Text(
+                                  loginProvider.filedata!.activeCamera
+                                      .toString(),
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
+                      ),
 
-                        /// Inactive Cameras
-                        SizedBox(
-                          height: 110,
-                          width: 180,
-                          child: Card(
-                            color: Colors.white,
-                            elevation: 0,
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    "In-Active\nCameras",
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 20,
-                                    ),
+                      /// Inactive Cameras
+                      SizedBox(
+                        height: 110,
+                        width: 180,
+                        child: Card(
+                          color: Colors.white,
+                          elevation: 0,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  "In-Active\nCameras",
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 20,
                                   ),
-                                  Text(
-                                    widget
-                                        .ftpConnectionProvider
-                                        .filedata!
-                                        .unActiveCamera
-                                        .toString(),
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 32,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                ),
+                                Text(
+                                  loginProvider.filedata!.unActiveCamera
+                                      .toString(),
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
+                      ),
 
-                        /// Storage Usage
-                        SizedBox(
-                          height: 110,
-                          width: 180,
-                          child: Card(
-                            color: Colors.white,
-                            elevation: 0,
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                children: [
-                                  TitleWidget(
-                                    title: "Storage Usage",
-                                    icon: FontAwesomeIcons.database,
-                                    iconColor: Colors.blue,
-                                  ),
-                                  Spacer(),
-                                  SubTitleWeidget(
-                                    subtitle:
-                                        "Total: ${widget.ftpConnectionProvider.filedata!.totalStorage.toStringAsFixed(0)}GB",
-                                    trailingText:
-                                        "${widget.ftpConnectionProvider.filedata!.storageUsage}%",
-                                  ),
-                                  const SizedBox(height: 4),
-                                  GradientProgressBar(
-                                    value:
-                                        widget
-                                            .ftpConnectionProvider
-                                            .filedata!
-                                            .storageUsage /
-                                        100,
-                                  ),
-                                ],
-                              ),
+                      /// Storage Usage
+                      SizedBox(
+                        height: 110,
+                        width: 180,
+                        child: Card(
+                          color: Colors.white,
+                          elevation: 0,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              children: [
+                                TitleWidget(
+                                  title: "Storage Usage",
+                                  icon: FontAwesomeIcons.database,
+                                  iconColor: Colors.blue,
+                                ),
+                                Spacer(),
+                                SubTitleWeidget(
+                                  subtitle:
+                                      "Total: ${loginProvider.filedata!.totalStorage.toStringAsFixed(0)}GB",
+                                  trailingText:
+                                      "${loginProvider.filedata!.storageUsage}%",
+                                ),
+                                const SizedBox(height: 4),
+                                GradientProgressBar(
+                                  value:
+                                      loginProvider.filedata!.storageUsage /
+                                      100,
+                                ),
+                              ],
                             ),
                           ),
                         ),
+                      ),
 
-                        /// RAM Usage
-                        SizedBox(
-                          height: 110,
-                          width: 180,
-                          child: Card(
-                            color: Colors.white,
-                            elevation: 0,
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                children: [
-                                  TitleWidget(
-                                    title: "RAM Usage",
-                                    icon: FontAwesomeIcons.memory,
-                                  ),
-                                  Spacer(),
-                                  SubTitleWeidget(
-                                    subtitle:
-                                        "Total: ${widget.ftpConnectionProvider.filedata!.totalRam.toStringAsFixed(0)}GB",
-                                    trailingText:
-                                        "${widget.ftpConnectionProvider.filedata!.ramUsage}%",
-                                  ),
-                                  const SizedBox(height: 4),
-                                  GradientProgressBar(
-                                    value:
-                                        widget
-                                            .ftpConnectionProvider
-                                            .filedata!
-                                            .ramUsage /
-                                        100,
-                                  ),
-                                ],
-                              ),
+                      /// RAM Usage
+                      SizedBox(
+                        height: 110,
+                        width: 180,
+                        child: Card(
+                          color: Colors.white,
+                          elevation: 0,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              children: [
+                                TitleWidget(
+                                  title: "RAM Usage",
+                                  icon: FontAwesomeIcons.memory,
+                                ),
+                                Spacer(),
+                                SubTitleWeidget(
+                                  subtitle:
+                                      "Total: ${loginProvider.filedata!.totalRam.toStringAsFixed(0)}GB",
+                                  trailingText:
+                                      "${loginProvider.filedata!.ramUsage}%",
+                                ),
+                                const SizedBox(height: 4),
+                                GradientProgressBar(
+                                  value: loginProvider.filedata!.ramUsage / 100,
+                                ),
+                              ],
                             ),
                           ),
                         ),
+                      ),
 
-                        /// CPU Health
-                        SizedBox(
-                          height: 140,
-                          width: 180,
-                          child: Card(
-                            color: Colors.white,
-                            elevation: 0,
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                children: [
-                                  TitleWidget(
-                                    title: "CPU Health",
-                                    icon: FontAwesomeIcons.microchip,
-                                    iconColor: Colors.purple,
-                                  ),
-                                  Spacer(),
-                                  SubTitleWeidget(
-                                    subtitle: "CPU Usage",
-                                    trailingText:
-                                        "${widget.ftpConnectionProvider.filedata!.cpuUsage}%",
-                                  ),
-                                  const SizedBox(height: 4),
-                                  GradientProgressBar(
-                                    value:
-                                        widget
-                                            .ftpConnectionProvider
-                                            .filedata!
-                                            .cpuUsage /
-                                        100,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  SubTitleWeidget(
-                                    subtitle: "Temperature",
-                                    trailingText:
-                                        "${widget.ftpConnectionProvider.filedata!.cpuTemperatureCelsius}°C",
-                                  ),
-                                ],
-                              ),
+                      /// CPU Health with temperature
+                      SizedBox(
+                        height: 140,
+                        width: 180,
+                        child: Card(
+                          color: Colors.white,
+                          elevation: 0,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              children: [
+                                TitleWidget(
+                                  title: "CPU Health",
+                                  icon: FontAwesomeIcons.microchip,
+                                  iconColor: Colors.purple,
+                                ),
+                                Spacer(),
+                                SubTitleWeidget(
+                                  subtitle: "CPU Usage",
+                                  trailingText:
+                                      "${loginProvider.filedata!.cpuUsage}%",
+                                ),
+                                const SizedBox(height: 4),
+                                GradientProgressBar(
+                                  value: loginProvider.filedata!.cpuUsage / 100,
+                                ),
+                                const SizedBox(height: 8),
+                                SubTitleWeidget(
+                                  subtitle: "Temperature",
+                                  trailingText:
+                                      "${loginProvider.filedata!.cpuTemperatureCelsius}°C",
+                                ),
+                              ],
                             ),
                           ),
                         ),
+                      ),
 
-                        /// GPU Health
-                        SizedBox(
-                          height: 140,
-                          width: 180,
-                          child: Card(
-                            color: Colors.white,
-                            elevation: 0,
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                children: [
-                                  TitleWidget(
-                                    title: "GPU Health",
-                                    icon: FontAwesomeIcons.desktop,
-                                    iconColor: Colors.teal,
-                                  ),
-                                  Spacer(),
-                                  SubTitleWeidget(
-                                    subtitle: "GPU Usage",
-                                    trailingText:
-                                        "${widget.ftpConnectionProvider.filedata!.gpu.usage}%",
-                                  ),
-                                  const SizedBox(height: 4),
-                                  GradientProgressBar(
-                                    value:
-                                        widget
-                                            .ftpConnectionProvider
-                                            .filedata!
-                                            .gpu
-                                            .usage /
-                                        100,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  SubTitleWeidget(
-                                    subtitle: "Temperature",
-                                    trailingText:
-                                        "${widget.ftpConnectionProvider.filedata!.gpu.temperatureCelsius}°C",
-                                  ),
-                                ],
-                              ),
+                      /// GPU Health with temprature
+                      SizedBox(
+                        height: 140,
+                        width: 180,
+                        child: Card(
+                          color: Colors.white,
+                          elevation: 0,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              children: [
+                                TitleWidget(
+                                  title: "GPU Health",
+                                  icon: FontAwesomeIcons.desktop,
+                                  iconColor: Colors.teal,
+                                ),
+                                Spacer(),
+                                SubTitleWeidget(
+                                  subtitle: "GPU Usage",
+                                  trailingText:
+                                      "${loginProvider.filedata!.gpu.usage}%",
+                                ),
+                                const SizedBox(height: 4),
+                                GradientProgressBar(
+                                  value:
+                                      loginProvider.filedata!.gpu.usage / 100,
+                                ),
+                                const SizedBox(height: 8),
+                                SubTitleWeidget(
+                                  subtitle: "Temperature",
+                                  trailingText:
+                                      "${loginProvider.filedata!.gpu.temperatureCelsius}°C",
+                                ),
+                              ],
                             ),
                           ),
                         ),
+                      ),
 
-                        /// IP Cameras
-                        SizedBox(
-                          width: 180,
-                          height: 200,
-                          child: Card(
-                            color: Colors.white,
-                            elevation: 0,
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                children: [
-                                  TitleWidget(
-                                    title: "IP Cameras",
-                                    icon: FontAwesomeIcons.video,
-                                    iconColor: Colors.green,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Expanded(
-                                    child: ListView(
-                                      children: [
-                                        Text(
-                                          "Active:",
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                      /// IP Cameras
+                      SizedBox(
+                        width: 180,
+                        height: 200,
+                        child: Card(
+                          color: Colors.white,
+                          elevation: 0,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              children: [
+                                TitleWidget(
+                                  title: "IP Cameras",
+                                  icon: FontAwesomeIcons.video,
+                                  iconColor: Colors.green,
+                                ),
+                                const SizedBox(height: 4),
+                                Expanded(
+                                  child: ListView(
+                                    children: [
+                                      Text(
+                                        "Active:",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
                                         ),
-                                        ...widget
-                                            .ftpConnectionProvider
-                                            .filedata!
-                                            .ipCamera
-                                            .active
-                                            .map(
-                                              (camera) => Column(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .spaceBetween,
-                                                    children: [
-                                                      Text(camera),
-                                                      Icon(
-                                                        Icons.videocam,
-                                                        color: Colors.green,
-                                                        size: 16,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  CustomDevider(),
-                                                ],
-                                              ),
-                                            ),
-                                        Text(
-                                          "Inactive:",
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        ...widget
-                                            .ftpConnectionProvider
-                                            .filedata!
-                                            .ipCamera
-                                            .inactive
-                                            .map(
-                                              (camera) => Column(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .spaceBetween,
-                                                    children: [
-                                                      Text(camera),
-                                                      Icon(
-                                                        Icons.videocam_off,
-                                                        color: Colors.red,
-                                                        size: 16,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  CustomDevider(),
-                                                ],
-                                              ),
-                                            ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        /// Hard Disk Health
-                        // SizedBox(
-                        //   width: 180,
-                        //   height: 200,
-                        //   child: Card(
-                        //     color: Colors.white,
-                        //     elevation: 0,
-                        //     child: Padding(
-                        //       padding: const EdgeInsets.all(16.0),
-                        //       child: Column(
-                        //         children: [
-                        //           TitleWidget(
-                        //             title: "Hard Disk Health",
-                        //             icon: FontAwesomeIcons.hardDrive,
-                        //             iconColor: Colors.orange,
-                        //           ),
-                        //           const SizedBox(height: 4),
-                        //           Expanded(
-                        //             child: ListView.builder(
-                        //               itemCount: widget
-                        //                   .ftpConnectionProvider
-                        //                   .filedata!
-                        //                   .hardDisks
-                        //                   .length,
-                        //               itemBuilder: (context, index) {
-                        //                 final disk = widget
-                        //                     .ftpConnectionProvider
-                        //                     .filedata!
-                        //                     .hardDisks[index];
-                        //                 return Column(
-                        //                   mainAxisSize: MainAxisSize.min,
-                        //                   children: [
-                        //                     Row(
-                        //                       mainAxisAlignment:
-                        //                           MainAxisAlignment
-                        //                               .spaceBetween,
-                        //                       children: [
-                        //                         Text(
-                        //                           disk.name,
-                        //                           style: TextStyle(
-                        //                             color: Colors.black,
-                        //                             fontSize: 12,
-                        //                           ),
-                        //                         ),
-                        //                         const SizedBox(width: 8),
-                        //                         Flexible(
-                        //                           child: Text(
-                        //                             textAlign: TextAlign.center,
-                        //                             "${disk.status}\n(${disk.usedGb}/${disk.totalGb}GB)",
-                        //                             style: TextStyle(
-                        //                               color:
-                        //                                   disk.status ==
-                        //                                       'Healthy'
-                        //                                   ? Colors.green
-                        //                                   : Colors.black,
-                        //                               fontWeight:
-                        //                                   FontWeight.bold,
-                        //                               fontSize: 10,
-                        //                             ),
-                        //                           ),
-                        //                         ),
-                        //                       ],
-                        //                     ),
-                        //                     CustomDevider(),
-                        //                   ],
-                        //                 );
-                        //               },
-                        //             ),
-                        //           ),
-                        //         ],
-                        //       ),
-                        //     ),
-                        //   ),
-                        // ),
-                        SizedBox(
-                          width: 180,
-                          height: 200,
-                          child: Card(
-                            color: Colors.white,
-                            elevation: 0,
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                children: [
-                                  TitleWidget(
-                                    title: "Hard Disk Health",
-                                    icon: FontAwesomeIcons.hardDrive,
-                                    iconColor: Colors.orange,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Expanded(
-                                    child: Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        // Chart
-                                        SizedBox(
-                                          width: 100,
-                                          height: 120,
-                                          child: SfCircularChart(
-                                            // tooltipBehavior: TooltipBehavior(
-                                            //   enable: true,
-                                            //   header:'', // Optional: Customize header
-                                            //   format:'point.y%',
-                                            //   textStyle: TextStyle(
-                                            //     fontSize: 8,
-                                            //   ),
-                                            //   activationMode: ActivationMode.singleTap,
-                                            // ),
-                                            tooltipBehavior: TooltipBehavior(
-                                              enable: true,
-                                              builder:
-                                                  (
-                                                    dynamic data,
-                                                    dynamic point,
-                                                    dynamic series,
-                                                    int pointIndex,
-                                                    int seriesIndex,
-                                                  ) {
-                                                    final value = point.y
-                                                        .toStringAsFixed(
-                                                          1,
-                                                        ); // One decimal place
-                                                    return Container(
-                                                      padding: EdgeInsets.all(
-                                                        4,
-                                                      ),
-                                                      decoration: BoxDecoration(
-                                                        color: Colors.black
-                                                            .withOpacity(0.8),
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                              4,
-                                                            ),
-                                                      ),
-                                                      child: Text(
-                                                        '$value%',
-                                                        style: TextStyle(
-                                                          fontSize: 8,
-                                                          color: Colors.white,
-                                                        ),
-                                                      ),
-                                                    );
-                                                  },
-                                              activationMode:
-                                                  ActivationMode.singleTap,
-                                            ),
-                                            series: <CircularSeries>[
-                                              RadialBarSeries<
-                                                ChartData,
-                                                String
-                                              >(
-                                                dataSource: widget
-                                                    .ftpConnectionProvider
-                                                    .filedata!
-                                                    .hardDisks
-                                                    .asMap()
-                                                    .entries
-                                                    .map((entry) {
-                                                      final disk = entry.value;
-                                                      return ChartData(
-                                                        disk.name,
-                                                        (disk.usedGb /
-                                                                disk.totalGb *
-                                                                100)
-                                                            .clamp(0, 100),
-                                                        disk.status,
-                                                      );
-                                                    })
-                                                    .toList(),
-                                                xValueMapper:
-                                                    (ChartData data, _) =>
-                                                        data.x,
-                                                yValueMapper:
-                                                    (ChartData data, _) =>
-                                                        data.y,
-                                                cornerStyle:
-                                                    CornerStyle.bothCurve,
-                                                gap: "10%",
-                                                radius: '100%',
-                                                innerRadius: '30%',
-                                                pointColorMapper:
-                                                    (ChartData data, _) =>
-                                                        data.status == 'Healthy'
-                                                        ? Colors.green
-                                                        : Colors.red,
-                                                dataLabelSettings:
-                                                    DataLabelSettings(
-                                                      isVisible: false,
-                                                    ),
-                                                maximumValue: 100,
-                                              ),
-                                            ],
-                                            annotations:
-                                                <CircularChartAnnotation>[],
-                                          ),
-                                        ),
-                                        // Annotations outside and to the right
-                                        Expanded(
-                                          child: SingleChildScrollView(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              mainAxisSize: MainAxisSize.max,
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: widget
-                                                  .ftpConnectionProvider
-                                                  .filedata!
-                                                  .hardDisks
-                                                  .asMap()
-                                                  .entries
-                                                  .map(
-                                                    (entry) => Padding(
-                                                      padding:
-                                                          const EdgeInsets.symmetric(
-                                                            vertical: 2,
-                                                          ),
-                                                      child: Text(
-                                                        "${entry.value.name}: ${entry.value.totalGb.toStringAsFixed(0)}GB",
-                                                        style: TextStyle(
-                                                          fontSize: 12,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          color:
-                                                              entry
-                                                                      .value
-                                                                      .status ==
-                                                                  'Healthy'
-                                                              ? Colors.green
-                                                              : Colors.red,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  )
-                                                  .toList(),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        /// Storage Distribution
-                        SizedBox(
-                          width: 180,
-                          height: 200,
-                          child: Card(
-                            color: Colors.white,
-                            elevation: 0,
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                children: [
-                                  TitleWidget(
-                                    title: "Storage Distribution",
-                                    icon: FontAwesomeIcons.chartPie,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Expanded(
-                                    child: ListView(
-                                      children: widget
-                                          .ftpConnectionProvider
-                                          .filedata!
-                                          .storageDistribution
-                                          .entries
+                                      ),
+                                      ...loginProvider.filedata!.ipCamera.active
                                           .map(
-                                            (entry) => Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                SubTitleWeidget(
-                                                  subtitle: entry.key,
-                                                  trailingText:
-                                                      "${entry.value}%",
-                                                ),
-                                                CustomDevider(),
-                                              ],
-                                            ),
-                                          )
-                                          .toList(),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        /// Recording Status
-                        SizedBox(
-                          width: 180,
-                          height: 200,
-                          child: Card(
-                            color: Colors.white,
-                            elevation: 0,
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                children: [
-                                  TitleWidget(
-                                    title: "Recordings",
-                                    icon: FontAwesomeIcons.video,
-                                    iconColor: Colors.red,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Expanded(
-                                    child: ListView.builder(
-                                      physics: const ClampingScrollPhysics(),
-                                      itemCount: widget
-                                          .ftpConnectionProvider
-                                          .filedata!
-                                          .recordingStatuses
-                                          .length,
-                                      itemBuilder: (context, index) {
-                                        final status = widget
-                                            .ftpConnectionProvider
-                                            .filedata!
-                                            .recordingStatuses[index];
-                                        return Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceBetween,
-                                              children: [
-                                                Text(
-                                                  status.name,
-                                                  style: TextStyle(
-                                                    color: Colors.black,
-                                                    fontSize: 12,
-                                                  ),
-                                                ),
-                                                Text(
-                                                  status.status
-                                                      ? "Recording"
-                                                      : "Not Recording",
-                                                  style: TextStyle(
-                                                    color: status.status
-                                                        ? Colors.black
-                                                        : Colors.red,
-                                                    fontSize: 10,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            CustomDevider(),
-                                          ],
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        /// Network Status
-                        SizedBox(
-                          height: 180,
-                          width: 180,
-                          child: Card(
-                            color: Colors.white,
-                            elevation: 0,
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                children: [
-                                  TitleWidget(
-                                    title: "Network Status",
-                                    icon: FontAwesomeIcons.wifi,
-                                    iconColor: Colors.green,
-                                  ),
-                                  Spacer(),
-                                  SubTitleWeidget(
-                                    subtitle: "Upload Speed",
-                                    trailingText:
-                                        "${widget.ftpConnectionProvider.filedata!.network.uploadSpeedMbps} Mbps",
-                                  ),
-                                  const SizedBox(height: 8),
-                                  SubTitleWeidget(
-                                    subtitle: "Download Speed",
-                                    trailingText:
-                                        "${widget.ftpConnectionProvider.filedata!.network.downloadSpeedMbps} Mbps",
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        /// Audio Devices
-                        SizedBox(
-                          width: 180,
-                          height: 180,
-                          child: Card(
-                            color: Colors.white,
-                            elevation: 0,
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                children: [
-                                  TitleWidget(
-                                    title: "Audio Devices",
-                                    icon: FontAwesomeIcons.microphone,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    "Total: ${widget.ftpConnectionProvider.filedata!.audioDevices.total}",
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Expanded(
-                                    child: ListView(
-                                      children: widget
-                                          .ftpConnectionProvider
-                                          .filedata!
-                                          .audioDevices
-                                          .devices
-                                          .map(
-                                            (device) => Column(
+                                            (camera) => Column(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
                                                 Row(
@@ -921,16 +360,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                                       MainAxisAlignment
                                                           .spaceBetween,
                                                   children: [
-                                                    Text(
-                                                      device,
-                                                      style: TextStyle(
-                                                        color: Colors.black,
-                                                        fontSize: 12,
-                                                      ),
-                                                    ),
+                                                    Text(camera),
                                                     Icon(
-                                                      Icons.mic,
-                                                      color: Colors.blue,
+                                                      Icons.videocam,
+                                                      color: Colors.green,
                                                       size: 16,
                                                     ),
                                                   ],
@@ -938,68 +371,535 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 CustomDevider(),
                                               ],
                                             ),
-                                          )
-                                          .toList(),
-                                    ),
+                                          ),
+                                      Text(
+                                        "Inactive:",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      ...loginProvider
+                                          .filedata!
+                                          .ipCamera
+                                          .inactive
+                                          .map(
+                                            (camera) => Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    Text(camera),
+                                                    Icon(
+                                                      Icons.videocam_off,
+                                                      color: Colors.red,
+                                                      size: 16,
+                                                    ),
+                                                  ],
+                                                ),
+                                                CustomDevider(),
+                                              ],
+                                            ),
+                                          ),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
+                      ),
 
-                        /// Location
-                        SizedBox(
-                          height: 180,
-                          width: 180,
-                          child: Card(
-                            color: Colors.white,
-                            elevation: 0,
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                children: [
-                                  TitleWidget(
-                                    title: "Location",
-                                    icon: FontAwesomeIcons.locationDot,
-                                    iconColor: Colors.red,
+                      /// Hard Disk Health
+                      // SizedBox(
+                      //   width: 180,
+                      //   height: 200,
+                      //   child: Card(
+                      //     color: Colors.white,
+                      //     elevation: 0,
+                      //     child: Padding(
+                      //       padding: const EdgeInsets.all(16.0),
+                      //       child: Column(
+                      //         children: [
+                      //           TitleWidget(
+                      //             title: "Hard Disk Health",
+                      //             icon: FontAwesomeIcons.hardDrive,
+                      //             iconColor: Colors.orange,
+                      //           ),
+                      //           const SizedBox(height: 4),
+                      //           Expanded(
+                      //             child: ListView.builder(
+                      //               itemCount: widget
+                      //                   .loginProvider
+                      //                   .filedata!
+                      //                   .hardDisks
+                      //                   .length,
+                      //               itemBuilder: (context, index) {
+                      //                 final disk = widget
+                      //                     .loginProvider
+                      //                     .filedata!
+                      //                     .hardDisks[index];
+                      //                 return Column(
+                      //                   mainAxisSize: MainAxisSize.min,
+                      //                   children: [
+                      //                     Row(
+                      //                       mainAxisAlignment:
+                      //                           MainAxisAlignment
+                      //                               .spaceBetween,
+                      //                       children: [
+                      //                         Text(
+                      //                           disk.name,
+                      //                           style: TextStyle(
+                      //                             color: Colors.black,
+                      //                             fontSize: 12,
+                      //                           ),
+                      //                         ),
+                      //                         const SizedBox(width: 8),
+                      //                         Flexible(
+                      //                           child: Text(
+                      //                             textAlign: TextAlign.center,
+                      //                             "${disk.status}\n(${disk.usedGb}/${disk.totalGb}GB)",
+                      //                             style: TextStyle(
+                      //                               color:
+                      //                                   disk.status ==
+                      //                                       'Healthy'
+                      //                                   ? Colors.green
+                      //                                   : Colors.black,
+                      //                               fontWeight:
+                      //                                   FontWeight.bold,
+                      //                               fontSize: 10,
+                      //                             ),
+                      //                           ),
+                      //                         ),
+                      //                       ],
+                      //                     ),
+                      //                     CustomDevider(),
+                      //                   ],
+                      //                 );
+                      //               },
+                      //             ),
+                      //           ),
+                      //         ],
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ),
+                      SizedBox(
+                        width: 180,
+                        height: 200,
+                        child: Card(
+                          color: Colors.white,
+                          elevation: 0,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              children: [
+                                TitleWidget(
+                                  title: "Hard Disk Health",
+                                  icon: FontAwesomeIcons.hardDrive,
+                                  iconColor: Colors.orange,
+                                ),
+                                const SizedBox(height: 4),
+                                Expanded(
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      // Chart
+                                      SizedBox(
+                                        width: 110,
+                                        height: 140,
+                                        child: SfCircularChart(
+                                          // tooltipBehavior: TooltipBehavior(
+                                          //   enable: true,
+                                          //   header:'', // Optional: Customize header
+                                          //   format:'point.y%',
+                                          //   textStyle: TextStyle(
+                                          //     fontSize: 8,
+                                          //   ),
+                                          //   activationMode: ActivationMode.singleTap,
+                                          // ),
+                                          tooltipBehavior: TooltipBehavior(
+                                            enable: true,
+                                            builder:
+                                                (
+                                                  dynamic data,
+                                                  dynamic point,
+                                                  dynamic series,
+                                                  int pointIndex,
+                                                  int seriesIndex,
+                                                ) {
+                                                  final value = point.y
+                                                      .toStringAsFixed(1);
+                                                  return Container(
+                                                    padding: EdgeInsets.all(4),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.black
+                                                          .withOpacity(0.8),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            4,
+                                                          ),
+                                                    ),
+                                                    child: Text(
+                                                      '$value%',
+                                                      style: TextStyle(
+                                                        fontSize: 8,
+                                                        color: Colors.white,
+                                                      ),
+                                                    ),
+                                                  );
+                                                },
+                                            activationMode:
+                                                ActivationMode.singleTap,
+                                          ),
+                                          series: <CircularSeries>[
+                                            RadialBarSeries<ChartData, String>(
+                                              dataSource: loginProvider
+                                                  .filedata!
+                                                  .hardDisks
+                                                  .asMap()
+                                                  .entries
+                                                  .map((entry) {
+                                                    final disk = entry.value;
+                                                    return ChartData(
+                                                      disk.name,
+                                                      (disk.usedGb /
+                                                              disk.totalGb *
+                                                              100)
+                                                          .clamp(0, 100),
+                                                      disk.status,
+                                                    );
+                                                  })
+                                                  .toList(),
+                                              xValueMapper:
+                                                  (ChartData data, _) => data.x,
+                                              yValueMapper:
+                                                  (ChartData data, _) => data.y,
+                                              cornerStyle:
+                                                  CornerStyle.bothCurve,
+                                              gap: "5%",
+                                              radius: '100%',
+                                              innerRadius: '30%',
+                                              pointColorMapper:
+                                                  (ChartData data, _) =>
+                                                      data.status == 'Healthy'
+                                                      ? Colors.green
+                                                      : Colors.red,
+                                              dataLabelSettings:
+                                                  DataLabelSettings(
+                                                    isVisible: false,
+                                                  ),
+                                              maximumValue: 100,
+                                            ),
+                                          ],
+                                          annotations:
+                                              <CircularChartAnnotation>[],
+                                        ),
+                                      ),
+                                      // Annotations outside and to the right
+                                      Expanded(
+                                        child: SingleChildScrollView(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisSize: MainAxisSize.max,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: loginProvider
+                                                .filedata!
+                                                .hardDisks
+                                                .asMap()
+                                                .entries
+                                                .map(
+                                                  (entry) => Padding(
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          vertical: 2,
+                                                        ),
+                                                    child: Text(
+                                                      "${entry.value.name}: ${entry.value.totalGb.toStringAsFixed(0)}GB",
+                                                      style: TextStyle(
+                                                        fontSize: 10,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color:
+                                                            entry
+                                                                    .value
+                                                                    .status ==
+                                                                'Healthy'
+                                                            ? Colors.green
+                                                            : Colors.red,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                )
+                                                .toList(),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  Spacer(),
-                                  SubTitleWeidget(
-                                    subtitle: "City",
-                                    trailingText: widget
-                                        .ftpConnectionProvider
-                                        .filedata!
-                                        .location
-                                        .city,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  SubTitleWeidget(
-                                    subtitle: "Country",
-                                    trailingText: widget
-                                        .ftpConnectionProvider
-                                        .filedata!
-                                        .location
-                                        .country,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  SubTitleWeidget(
-                                    subtitle: "Coordinates",
-                                    trailingText:
-                                        "${widget.ftpConnectionProvider.filedata!.location.latitude.toStringAsFixed(2)}, ${widget.ftpConnectionProvider.filedata!.location.longitude.toStringAsFixed(2)}",
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+
+                      /// Storage Distribution
+                      SizedBox(
+                        width: 180,
+                        height: 200,
+                        child: Card(
+                          color: Colors.white,
+                          elevation: 0,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              children: [
+                                TitleWidget(
+                                  title: "Storage Distribution",
+                                  icon: FontAwesomeIcons.chartPie,
+                                ),
+                                const SizedBox(height: 4),
+                                Expanded(
+                                  child: ListView(
+                                    children: loginProvider
+                                        .filedata!
+                                        .storageDistribution
+                                        .entries
+                                        .map(
+                                          (entry) => Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              SubTitleWeidget(
+                                                subtitle: entry.key,
+                                                trailingText: "${entry.value}%",
+                                              ),
+                                              CustomDevider(),
+                                            ],
+                                          ),
+                                        )
+                                        .toList(),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      /// Recording Status
+                      SizedBox(
+                        width: 180,
+                        height: 200,
+                        child: Card(
+                          color: Colors.white,
+                          elevation: 0,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              children: [
+                                TitleWidget(
+                                  title: "Recordings",
+                                  icon: FontAwesomeIcons.video,
+                                  iconColor: Colors.red,
+                                ),
+                                const SizedBox(height: 4),
+                                Expanded(
+                                  child: ListView.builder(
+                                    physics: const ClampingScrollPhysics(),
+                                    itemCount: loginProvider
+                                        .filedata!
+                                        .recordingStatuses
+                                        .length,
+                                    itemBuilder: (context, index) {
+                                      final status = loginProvider
+                                          .filedata!
+                                          .recordingStatuses[index];
+                                      return Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(
+                                                status.name,
+                                                style: TextStyle(
+                                                  color: Colors.black,
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                              Text(
+                                                status.status
+                                                    ? "Recording"
+                                                    : "Not Recording",
+                                                style: TextStyle(
+                                                  color: status.status
+                                                      ? Colors.black
+                                                      : Colors.red,
+                                                  fontSize: 10,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          CustomDevider(),
+                                        ],
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      /// Network Status
+                      SizedBox(
+                        height: 180,
+                        width: 180,
+                        child: Card(
+                          color: Colors.white,
+                          elevation: 0,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              children: [
+                                TitleWidget(
+                                  title: "Network Status",
+                                  icon: FontAwesomeIcons.wifi,
+                                  iconColor: Colors.green,
+                                ),
+                                Spacer(),
+                                SubTitleWeidget(
+                                  subtitle: "Upload Speed",
+                                  trailingText:
+                                      "${loginProvider.filedata!.network.uploadSpeedMbps} Mbps",
+                                ),
+                                const SizedBox(height: 8),
+                                SubTitleWeidget(
+                                  subtitle: "Download Speed",
+                                  trailingText:
+                                      "${loginProvider.filedata!.network.downloadSpeedMbps} Mbps",
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      /// Audio Devices
+                      SizedBox(
+                        width: 180,
+                        height: 180,
+                        child: Card(
+                          color: Colors.white,
+                          elevation: 0,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              children: [
+                                TitleWidget(
+                                  title: "Audio Devices",
+                                  icon: FontAwesomeIcons.microphone,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "Total: ${loginProvider.filedata!.audioDevices.total}",
+                                ),
+                                const SizedBox(height: 4),
+                                Expanded(
+                                  child: ListView(
+                                    children: loginProvider
+                                        .filedata!
+                                        .audioDevices
+                                        .devices
+                                        .map(
+                                          (device) => Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Text(
+                                                    device,
+                                                    style: TextStyle(
+                                                      color: Colors.black,
+                                                      fontSize: 12,
+                                                    ),
+                                                  ),
+                                                  Icon(
+                                                    Icons.mic,
+                                                    color: Colors.blue,
+                                                    size: 16,
+                                                  ),
+                                                ],
+                                              ),
+                                              CustomDevider(),
+                                            ],
+                                          ),
+                                        )
+                                        .toList(),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      /// Location
+                      SizedBox(
+                        height: 180,
+                        width: 180,
+                        child: Card(
+                          color: Colors.white,
+                          elevation: 0,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              children: [
+                                TitleWidget(
+                                  title: "Location",
+                                  icon: FontAwesomeIcons.locationDot,
+                                  iconColor: Colors.red,
+                                ),
+                                Spacer(),
+                                SubTitleWeidget(
+                                  subtitle: "City",
+                                  trailingText:
+                                      loginProvider.filedata!.location.city,
+                                ),
+                                const SizedBox(height: 8),
+                                SubTitleWeidget(
+                                  subtitle: "Country",
+                                  trailingText:
+                                      loginProvider.filedata!.location.country,
+                                ),
+                                const SizedBox(height: 8),
+                                SubTitleWeidget(
+                                  subtitle: "Coordinates",
+                                  trailingText:
+                                      "${loginProvider.filedata!.location.latitude.toStringAsFixed(2)}, ${loginProvider.filedata!.location.longitude.toStringAsFixed(2)}",
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
-    );
+          );
   }
 }
 
@@ -1042,7 +942,11 @@ class SubTitleWeidget extends StatelessWidget {
           Spacer(),
           Text(
             trailingText,
-            style: TextStyle(color: Colors.black, fontSize: 10),
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),

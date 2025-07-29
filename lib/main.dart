@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:usbdataftptest/core/apptheme.dart';
-import 'package:usbdataftptest/features/login/presentation/provider/login_provider.dart';
-import 'package:usbdataftptest/features/login/presentation/screens/login.dart';
-import 'package:usbdataftptest/providers/ftpconnection_provider.dart';
+import 'core/apptheme.dart';
+import 'features/login/presentation/provider/login_provider.dart';
+import 'features/login/presentation/screens/login.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,9 +15,6 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider<FtpConnectionProvider>(
-          create: (_) => FtpConnectionProvider(),
-        ),
         ChangeNotifierProvider<LoginProvider>(create: (_) => LoginProvider()),
       ],
       child: MaterialApp(

@@ -4,9 +4,12 @@ import 'dart:io';
 import 'dart:developer' as dev;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:ftpconnect/ftpconnect.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:usbdataftptest/helper.dart';
+
+import '../../../../models/dashboard_model.dart';
 
 /// Represents the different states of the login process.
 enum LoginState { loading, loginSucess, loginFailed, noLogin }
@@ -62,7 +65,7 @@ class LoginProvider extends ChangeNotifier {
   // ---- Login State ----
   LoginState _loginState = LoginState.noLogin;
   LoginState get loginState => _loginState;
-  set loginState(LoginState value){
+  set loginState(LoginState value) {
     _loginState = value;
     notifyListeners();
   }
@@ -76,6 +79,9 @@ class LoginProvider extends ChangeNotifier {
 
   // Flag to prevent concurrent initialization attempts
   bool _isInitializing = false;
+
+  DashboardModel? _fileData;
+  DashboardModel? get filedata => _fileData;
 
   /// Initializes the tethering and FTP connection process.
   /// - Detects mobile tethering IP.
@@ -263,5 +269,12 @@ class LoginProvider extends ChangeNotifier {
       _loginState = LoginState.loginFailed;
       notifyListeners();
     }
+  }
+
+  Future<void> checkingTempData() async {
+    final String response = await rootBundle.loadString('assets/abc.json');
+    final Map<String, dynamic> data = json.decode(response);
+    _fileData = DashboardModel.fromMap(data);
+    notifyListeners();
   }
 }
