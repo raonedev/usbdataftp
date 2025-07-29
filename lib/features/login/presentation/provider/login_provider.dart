@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:ftpconnect/ftpconnect.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:usbdataftptest/helper.dart';
+import 'package:usbdataftptest/models/dashboard_new_model.dart';
 
 import '../../../../models/dashboard_model.dart';
 
@@ -76,6 +77,8 @@ class LoginProvider extends ChangeNotifier {
   // --- Ftp connection State ---
   FtpConnectionState _ftpConnectionState = FtpConnectionState.none;
   FtpConnectionState get ftpConnectionState => _ftpConnectionState;
+  String? _ftpErrorMessage;
+  String? get ftpErrorMessage=>_ftpErrorMessage;
 
   // Flag to prevent concurrent initialization attempts
   bool _isInitializing = false;
@@ -93,6 +96,7 @@ class LoginProvider extends ChangeNotifier {
     _isInitializing = true;
 
     while (!_isFTPConnected) {
+      _ftpErrorMessage=null;
       try {
         // Attempt to retrieve mobile device IP (via tethering).
         _mobileTetheringIp = await getTetheringMobileIP();
@@ -131,6 +135,7 @@ class LoginProvider extends ChangeNotifier {
               if (connected) {
                 _isFTPConnected = true;
                 _ftpConnectionState = FtpConnectionState.sucess;
+                _ftpErrorMessage=null;
                 notifyListeners();
                 dev.log("FTP connected to $_deviceTetheringIP");
                 // Start listening to FTP file stream
@@ -157,11 +162,13 @@ class LoginProvider extends ChangeNotifier {
                 // Connection failed
                 dev.log("FTP connection rejected.");
                 _ftpConnectionState = FtpConnectionState.fialed;
+                _ftpErrorMessage="Failed to fetching data.";
                 _isFTPConnected = false;
                 notifyListeners();
               }
             } catch (ftpError, ftpStack) {
               _ftpConnectionState = FtpConnectionState.fialed;
+              _ftpErrorMessage="Failed to fetching data.";
               notifyListeners();
               dev.log(
                 "FTP connection failed",
@@ -258,6 +265,7 @@ class LoginProvider extends ChangeNotifier {
           _passwordController.text.trim() == "admin123") {
         _loginState = LoginState.loginSucess;
         _loginErrorMessage = null;
+        _ftpConnectionState = FtpConnectionState.none;
         dev.log("login success");
         notifyListeners();
       } else {
@@ -277,6 +285,8 @@ class LoginProvider extends ChangeNotifier {
   Future<void> checkingTempData() async {
     final String response = await rootBundle.loadString('assets/abc.json');
     final Map<String, dynamic> data = json.decode(response);
+    final DashboardNewModel dashboardNewModel= DashboardNewModel.fromMap(data);
+    dev.log(dashboardNewModel.toString());
     _fileData = DashboardModel.fromMap(data);
     notifyListeners();
   }

@@ -1,0 +1,93 @@
+{
+    "active_camera": 5,
+    "unactive_camera": 1,
+    "ip_cameras": [
+        {
+            "name": "camera 1",
+            "isRecording": true,
+            "isActive": true
+        },
+        {
+            "name": "camera 3",
+            "isRecording": true,
+            "isActive": true
+        },
+        {
+            "name": "camera 5",
+            "isRecording": true,
+            "isActive": true
+        },
+        {
+            "name": "camera 6",
+            "isRecording": true,
+            "isActive": true
+        },
+        {
+            "name": "camera 7",
+            "isRecording": true,
+            "isActive": true
+        },
+        {
+            "name": "camera 2",
+            "isRecording": false,
+            "isActive": false
+        }
+    ],
+    "cpu": {
+        "usage": 95,
+        "temperature_celsius": 72.5
+    },
+    "gpu": {
+        "usage": 78,
+        "temperature_celsius": 65
+    },
+    "ram":{
+        "usage": 40,
+        "total_gb":8
+    },
+    "storage":{
+        "usage": 565,
+        "total_gb":768
+    },
+    "hard_disk": [
+        {
+            "name": "Disk 1",
+            "status": "Healthy",
+            "total_gb": 256,
+            "used_gb": 160
+        },
+        {
+            "name": "Disk 2",
+            "status": "Healthy",
+            "total_gb": 256,
+            "used_gb": 172
+        },
+        {
+            "name": "Disk 3",
+            "status": "UnHealthy",
+            "total_gb": 256,
+            "used_gb": 230
+        }
+    ],
+    "vms": {
+        "name": "SecureVision",
+        "version": "2.1.5"
+    },
+    "network": {
+        "upload_speed_mbps": 5.2,
+        "download_speed_mbps": 24.6
+    },
+    "audio_devices": {
+        "total": 3,
+        "devices": [
+            "Mic 1",
+            "Mic 2",
+            "Line-In"
+        ]
+    },
+    "location": {
+        "latitude": 28.6139,
+        "longitude": 77.2090,
+        "city": "New Delhi"
+    }
+}

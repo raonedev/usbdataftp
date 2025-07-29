@@ -40,34 +40,33 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
       backgroundColor: Color(0xFFF5F5F5),
       body: Consumer<LoginProvider>(
         builder: (context, loginProvider, child) {
-          // Check if mobile tethering IP is NOT found AND we haven't navigated yet.
-          if (!loginProvider.isMobileTetheringIpFound &&
-              !_hasNavigatedToLogin) {
-            // Set the flag to true IMMEDIATELY before scheduling the navigation.
-            // This is crucial to prevent re-triggering during subsequent rebuilds
-            // before the navigation actually completes.
-            _hasNavigatedToLogin = true;
+          // // Check if mobile tethering IP is NOT found AND we haven't navigated yet.
+          // if (!loginProvider.isMobileTetheringIpFound && !_hasNavigatedToLogin) {
+          //   // Set the flag to true IMMEDIATELY before scheduling the navigation.
+          //   // This is crucial to prevent re-triggering during subsequent rebuilds
+          //   // before the navigation actually completes.
+          //   _hasNavigatedToLogin = true;
 
-            // Use addPostFrameCallback to ensure navigation happens after the current
-            // build phase is complete, preventing errors.
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              // Ensure the widget is still in the tree before attempting navigation.
-              if (mounted) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                );
-              }
-            });
-          }
+          //   // Use addPostFrameCallback to ensure navigation happens after the current
+          //   // build phase is complete, preventing errors.
+          //   WidgetsBinding.instance.addPostFrameCallback((_) {
+          //     // Ensure the widget is still in the tree before attempting navigation.
+          //     if (mounted) {
+          //       Navigator.pushReplacement(
+          //         context,
+          //         MaterialPageRoute(builder: (_) => const LoginScreen()),
+          //       );
+          //     }
+          //   });
+          // }
           return child!;
         },
         child: IndexedStack(
           index: _selectedIndex,
           children: [
             HomeScreen(loginProvider: loginProvider),
-            Center(child: Text("Recordings")),
-            Center(child: Text("Setting screen")),
+            Center(child: Text("Np Recordings Found")),
+            // Center(child: Text("Setting screen")),
           ],
         ),
       ),

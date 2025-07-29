@@ -150,7 +150,7 @@ class PortraitView extends StatelessWidget {
                                 color: Colors.red,
                               ),
                         title: Text(
-                          "Fetch Data",
+                          "Fetch health",
                           style: Theme.of(context).textTheme.labelLarge,
                         ),
                         indicatorColor: loginProvider.isFTPConnected
@@ -163,6 +163,8 @@ class PortraitView extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 12),
+
+                  /// usb tethering is not ON .instruction for turn on usb Tethering
                   if (!loginProvider.isUsbTethering)
                     Row(
                       children: [
@@ -209,6 +211,7 @@ class PortraitView extends StatelessWidget {
                       ],
                     ),
 
+                  // finding device ip
                   if (loginProvider.isUsbTethering &&
                       !loginProvider.isDeviceTethering)
                     Text(
@@ -217,6 +220,15 @@ class PortraitView extends StatelessWidget {
                         context,
                       ).textTheme.labelSmall?.copyWith(color: Colors.black54),
                     ),
+
+                  /// ftp connection error
+                  // if (loginProvider.ftpConnectionState ==
+                  //         FtpConnectionState.fialed &&
+                  //     loginProvider.ftpErrorMessage != null)
+                  //   Text(
+                  //     loginProvider.ftpErrorMessage!,
+                  //     style: TextStyle(color: Colors.red),
+                  //   ),
                 ],
               ),
             ),
@@ -258,35 +270,60 @@ class PortraitView extends StatelessWidget {
                     onPressed: loginProvider.loginState == LoginState.loading
                         ? null
                         : () async {
-                            // await loginProvider.loginSubmit();
-                            // if (loginProvider.loginState ==
-                            //     LoginState.loginSucess) {
-                            //   if (!context.mounted) return;
-                            //   Navigator.pushReplacement(
-                            //     context,
-                            //     MaterialPageRoute(
-                            //       builder: (_) => DashBoardScreen(),
+                            await loginProvider.loginSubmit();
+                            if (loginProvider.loginState ==
+                                LoginState.loginSucess) {
+                              if (!context.mounted) return;
+                              loginProvider.checkingTempData();
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => DashBoardScreen(),
+                                ),
+                              );
+                            }
+
+                            // if (loginProvider.usernameController.text.isEmpty ||
+                            //     loginProvider.passwordController.text.isEmpty) {
+                            //   ScaffoldMessenger.of(context).showSnackBar(
+                            //     SnackBar(
+                            //       content: Text(
+                            //         "Please enter a valid credentials",
+                            //       ),
                             //     ),
                             //   );
+                            // } else if (!loginProvider.isFTPConnected) {
+                            //   ScaffoldMessenger.of(context).showSnackBar(
+                            //     SnackBar(
+                            //       content: Text(
+                            //         "Please wait for fetching data.",
+                            //       ),
+                            //     ),
+                            //   );
+                            // } else {
+                            //   await loginProvider.loginSubmit();
+                            //   if (loginProvider.loginState ==
+                            //       LoginState.loginSucess) {
+                            //     if (!context.mounted) return;
+                            //     Navigator.pushReplacement(
+                            //       context,
+                            //       MaterialPageRoute(
+                            //         builder: (_) => DashBoardScreen(),
+                            //       ),
+                            //     );
+                            //   } else if (loginProvider.loginState ==
+                            //       LoginState.loginFailed) {
+                            //     if (!context.mounted) return;
+                            //     ScaffoldMessenger.of(context).showSnackBar(
+                            //       SnackBar(
+                            //         content: Text(
+                            //           loginProvider.loginErrorMessage ??
+                            //               "Something went wrong.",
+                            //         ),
+                            //       ),
+                            //     );
+                            //   }
                             // }
-
-                            if (!loginProvider.isFTPConnected) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("FTP is not connected")),
-                              );
-                            } else {
-                              await loginProvider.loginSubmit();
-                              if (loginProvider.loginState ==
-                                  LoginState.loginSucess) {
-                                if (!context.mounted) return;
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => DashBoardScreen(),
-                                  ),
-                                );
-                              }
-                            }
                           },
                     gradient: LinearGradient(
                       colors: [Colors.blue, Colors.purple],
@@ -383,10 +420,38 @@ class LandScapeView extends StatelessWidget {
                       onPressed: loginProvider.loginState == LoginState.loading
                           ? null
                           : () async {
-                              if (!loginProvider.isFTPConnected) {
+                              // await loginProvider.loginSubmit();
+                              // if (loginProvider.loginState ==
+                              //     LoginState.loginSucess) {
+                              //   if (!context.mounted) return;
+                              //   Navigator.pushReplacement(
+                              //     context,
+                              //     MaterialPageRoute(
+                              //       builder: (_) => DashBoardScreen(),
+                              //     ),
+                              //   );
+                              // }
+                              if (loginProvider
+                                      .usernameController
+                                      .text
+                                      .isEmpty ||
+                                  loginProvider
+                                      .passwordController
+                                      .text
+                                      .isEmpty) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text("FTP is not connected"),
+                                    content: Text(
+                                      "Please enter a valid credentials",
+                                    ),
+                                  ),
+                                );
+                              } else if (!loginProvider.isFTPConnected) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      "Please wait for fetching data.",
+                                    ),
                                   ),
                                 );
                               } else {
@@ -398,6 +463,17 @@ class LandScapeView extends StatelessWidget {
                                     context,
                                     MaterialPageRoute(
                                       builder: (_) => DashBoardScreen(),
+                                    ),
+                                  );
+                                } else if (loginProvider.loginState ==
+                                    LoginState.loginFailed) {
+                                  if (!context.mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        loginProvider.loginErrorMessage ??
+                                            "Something went wrong.",
+                                      ),
                                     ),
                                   );
                                 }
@@ -619,7 +695,7 @@ class CustomVerticalSteps extends StatelessWidget {
                   )
                 : const Icon(Icons.error_rounded, size: 12, color: Colors.red),
             title: Text(
-              "Fetch Data",
+              "Fetch health",
               style: Theme.of(context).textTheme.labelLarge,
             ),
             indicatorColor: loginProvider.isFTPConnected
