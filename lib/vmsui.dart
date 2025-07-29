@@ -133,7 +133,8 @@ class HomeScreen extends StatelessWidget {
                                 ),
                                 Text(
                                   loginProvider.filedata!.activeCamera
-                                      .toString(),
+                                          ?.toString() ??
+                                      '0',
                                   style: TextStyle(
                                     color: Colors.black,
                                     fontSize: 32,
@@ -167,8 +168,9 @@ class HomeScreen extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  loginProvider.filedata!.unActiveCamera
-                                      .toString(),
+                                  loginProvider.filedata!.unactiveCamera
+                                          ?.toString() ??
+                                      '0',
                                   style: TextStyle(
                                     color: Colors.black,
                                     fontSize: 32,
@@ -200,15 +202,20 @@ class HomeScreen extends StatelessWidget {
                                 Spacer(),
                                 SubTitleWeidget(
                                   subtitle:
-                                      "Total: ${loginProvider.filedata!.totalStorage.toStringAsFixed(0)}GB",
+                                      "Total: ${loginProvider.filedata!.storage?.totalGb?.toStringAsFixed(0) ?? '0'}GB",
                                   trailingText:
-                                      "${loginProvider.filedata!.storageUsage}%",
+                                      "${((loginProvider.filedata!.storage?.usage ?? 0) / (loginProvider.filedata!.storage?.totalGb ?? 1) * 100).toStringAsFixed(0)}%",
                                 ),
                                 const SizedBox(height: 4),
                                 GradientProgressBar(
                                   value:
-                                      loginProvider.filedata!.storageUsage /
-                                      100,
+                                      (loginProvider.filedata!.storage?.usage ??
+                                          0) /
+                                      (loginProvider
+                                              .filedata!
+                                              .storage
+                                              ?.totalGb ??
+                                          1),
                                 ),
                               ],
                             ),
@@ -233,14 +240,12 @@ class HomeScreen extends StatelessWidget {
                                 ),
                                 Spacer(),
                                 SubTitleWeidget(
-                                  subtitle:
-                                      "Total: ${loginProvider.filedata!.totalRam.toStringAsFixed(0)}GB",
-                                  trailingText:
-                                      "${loginProvider.filedata!.ramUsage}%",
+                                  subtitle:"Total: ${loginProvider.filedata!.ram?.totalGb?.toStringAsFixed(0) ?? '0'}GB",
+                                  trailingText:"${loginProvider.filedata!.ram?.usage}%",
                                 ),
                                 const SizedBox(height: 4),
                                 GradientProgressBar(
-                                  value: loginProvider.filedata!.ramUsage / 100,
+                                  value: (loginProvider.filedata!.ram?.usage ??0)/100,
                                 ),
                               ],
                             ),
@@ -268,17 +273,20 @@ class HomeScreen extends StatelessWidget {
                                 SubTitleWeidget(
                                   subtitle: "CPU Usage",
                                   trailingText:
-                                      "${loginProvider.filedata!.cpuUsage}%",
+                                      "${loginProvider.filedata!.cpu?.usage?.toStringAsFixed(0) ?? '0'}%",
                                 ),
                                 const SizedBox(height: 4),
                                 GradientProgressBar(
-                                  value: loginProvider.filedata!.cpuUsage / 100,
+                                  value:
+                                      (loginProvider.filedata!.cpu?.usage ??
+                                          0) /
+                                      100,
                                 ),
                                 const SizedBox(height: 8),
                                 SubTitleWeidget(
                                   subtitle: "Temperature",
                                   trailingText:
-                                      "${loginProvider.filedata!.cpuTemperatureCelsius}°C",
+                                      "${loginProvider.filedata!.cpu?.temperatureCelsius?.toStringAsFixed(1) ?? '0'}°C",
                                 ),
                               ],
                             ),
@@ -286,7 +294,7 @@ class HomeScreen extends StatelessWidget {
                         ),
                       ),
 
-                      /// GPU Health with temprature
+                      /// GPU Health with temperature
                       SizedBox(
                         height: 140,
                         width: 180,
@@ -306,18 +314,20 @@ class HomeScreen extends StatelessWidget {
                                 SubTitleWeidget(
                                   subtitle: "GPU Usage",
                                   trailingText:
-                                      "${loginProvider.filedata!.gpu.usage}%",
+                                      "${loginProvider.filedata!.gpu?.usage?.toStringAsFixed(0) ?? '0'}%",
                                 ),
                                 const SizedBox(height: 4),
                                 GradientProgressBar(
                                   value:
-                                      loginProvider.filedata!.gpu.usage / 100,
+                                      (loginProvider.filedata!.gpu?.usage ??
+                                          0) /
+                                      100,
                                 ),
                                 const SizedBox(height: 8),
                                 SubTitleWeidget(
                                   subtitle: "Temperature",
                                   trailingText:
-                                      "${loginProvider.filedata!.gpu.temperatureCelsius}°C",
+                                      "${loginProvider.filedata!.gpu?.temperatureCelsius?.toStringAsFixed(1) ?? '0'}°C",
                                 ),
                               ],
                             ),
@@ -351,7 +361,10 @@ class HomeScreen extends StatelessWidget {
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                      ...loginProvider.filedata!.ipCamera.active
+                                      ...?loginProvider.filedata!.ipCameras
+                                          ?.where(
+                                            (camera) => camera.isActive == true,
+                                          )
                                           .map(
                                             (camera) => Column(
                                               mainAxisSize: MainAxisSize.min,
@@ -361,7 +374,9 @@ class HomeScreen extends StatelessWidget {
                                                       MainAxisAlignment
                                                           .spaceBetween,
                                                   children: [
-                                                    Text(camera),
+                                                    Text(
+                                                      camera.name ?? 'Unknown',
+                                                    ),
                                                     Icon(
                                                       Icons.videocam,
                                                       color: Colors.green,
@@ -379,10 +394,10 @@ class HomeScreen extends StatelessWidget {
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                      ...loginProvider
-                                          .filedata!
-                                          .ipCamera
-                                          .inactive
+                                      ...?loginProvider.filedata!.ipCameras
+                                          ?.where(
+                                            (camera) => camera.isActive != true,
+                                          )
                                           .map(
                                             (camera) => Column(
                                               mainAxisSize: MainAxisSize.min,
@@ -392,7 +407,9 @@ class HomeScreen extends StatelessWidget {
                                                       MainAxisAlignment
                                                           .spaceBetween,
                                                   children: [
-                                                    Text(camera),
+                                                    Text(
+                                                      camera.name ?? 'Unknown',
+                                                    ),
                                                     Icon(
                                                       Icons.videocam_off,
                                                       color: Colors.red,
@@ -414,79 +431,6 @@ class HomeScreen extends StatelessWidget {
                       ),
 
                       /// Hard Disk Health
-                      // SizedBox(
-                      //   width: 180,
-                      //   height: 200,
-                      //   child: Card(
-                      //     color: Colors.white,
-                      //     elevation: 0,
-                      //     child: Padding(
-                      //       padding: const EdgeInsets.all(16.0),
-                      //       child: Column(
-                      //         children: [
-                      //           TitleWidget(
-                      //             title: "Hard Disk Health",
-                      //             icon: FontAwesomeIcons.hardDrive,
-                      //             iconColor: Colors.orange,
-                      //           ),
-                      //           const SizedBox(height: 4),
-                      //           Expanded(
-                      //             child: ListView.builder(
-                      //               itemCount: widget
-                      //                   .loginProvider
-                      //                   .filedata!
-                      //                   .hardDisks
-                      //                   .length,
-                      //               itemBuilder: (context, index) {
-                      //                 final disk = widget
-                      //                     .loginProvider
-                      //                     .filedata!
-                      //                     .hardDisks[index];
-                      //                 return Column(
-                      //                   mainAxisSize: MainAxisSize.min,
-                      //                   children: [
-                      //                     Row(
-                      //                       mainAxisAlignment:
-                      //                           MainAxisAlignment
-                      //                               .spaceBetween,
-                      //                       children: [
-                      //                         Text(
-                      //                           disk.name,
-                      //                           style: TextStyle(
-                      //                             color: Colors.black,
-                      //                             fontSize: 12,
-                      //                           ),
-                      //                         ),
-                      //                         const SizedBox(width: 8),
-                      //                         Flexible(
-                      //                           child: Text(
-                      //                             textAlign: TextAlign.center,
-                      //                             "${disk.status}\n(${disk.usedGb}/${disk.totalGb}GB)",
-                      //                             style: TextStyle(
-                      //                               color:
-                      //                                   disk.status ==
-                      //                                       'Healthy'
-                      //                                   ? Colors.green
-                      //                                   : Colors.black,
-                      //                               fontWeight:
-                      //                                   FontWeight.bold,
-                      //                               fontSize: 10,
-                      //                             ),
-                      //                           ),
-                      //                         ),
-                      //                       ],
-                      //                     ),
-                      //                     CustomDevider(),
-                      //                   ],
-                      //                 );
-                      //               },
-                      //             ),
-                      //           ),
-                      //         ],
-                      //       ),
-                      //     ),
-                      //   ),
-                      // ),
                       SizedBox(
                         width: 180,
                         height: 200,
@@ -513,15 +457,6 @@ class HomeScreen extends StatelessWidget {
                                         width: 110,
                                         height: 140,
                                         child: SfCircularChart(
-                                          // tooltipBehavior: TooltipBehavior(
-                                          //   enable: true,
-                                          //   header:'', // Optional: Customize header
-                                          //   format:'point.y%',
-                                          //   textStyle: TextStyle(
-                                          //     fontSize: 8,
-                                          //   ),
-                                          //   activationMode: ActivationMode.singleTap,
-                                          // ),
                                           tooltipBehavior: TooltipBehavior(
                                             enable: true,
                                             builder:
@@ -538,7 +473,9 @@ class HomeScreen extends StatelessWidget {
                                                     padding: EdgeInsets.all(4),
                                                     decoration: BoxDecoration(
                                                       color: Colors.black
-                                                          .withOpacity(0.8),
+                                                          .withValues(
+                                                            alpha: 0.8,
+                                                          ),
                                                       borderRadius:
                                                           BorderRadius.circular(
                                                             4,
@@ -558,23 +495,29 @@ class HomeScreen extends StatelessWidget {
                                           ),
                                           series: <CircularSeries>[
                                             RadialBarSeries<ChartData, String>(
-                                              dataSource: loginProvider
-                                                  .filedata!
-                                                  .hardDisks
-                                                  .asMap()
-                                                  .entries
-                                                  .map((entry) {
-                                                    final disk = entry.value;
-                                                    return ChartData(
-                                                      disk.name,
-                                                      (disk.usedGb /
-                                                              disk.totalGb *
-                                                              100)
-                                                          .clamp(0, 100),
-                                                      disk.status,
-                                                    );
-                                                  })
-                                                  .toList(),
+                                              dataSource:
+                                                  loginProvider
+                                                      .filedata!
+                                                      .hardDisk
+                                                      ?.asMap()
+                                                      .entries
+                                                      .map((entry) {
+                                                        final disk =
+                                                            entry.value;
+                                                        return ChartData(
+                                                          disk.name ??
+                                                              'Unknown',
+                                                          ((disk.usedGb ?? 0) /
+                                                                  (disk.totalGb ??
+                                                                      1) *
+                                                                  100)
+                                                              .clamp(0, 100),
+                                                          disk.status ??
+                                                              'Unknown',
+                                                        );
+                                                      })
+                                                      .toList() ??
+                                                  [],
                                               xValueMapper:
                                                   (ChartData data, _) => data.x,
                                               yValueMapper:
@@ -609,35 +552,35 @@ class HomeScreen extends StatelessWidget {
                                             mainAxisSize: MainAxisSize.max,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.center,
-                                            children: loginProvider
-                                                .filedata!
-                                                .hardDisks
-                                                .asMap()
-                                                .entries
-                                                .map(
-                                                  (entry) => Padding(
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                          vertical: 2,
+                                            children:
+                                                loginProvider.filedata!.hardDisk
+                                                    ?.asMap()
+                                                    .entries
+                                                    .map(
+                                                      (entry) => Padding(
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              vertical: 2,
+                                                            ),
+                                                        child: Text(
+                                                          "${entry.value.name ?? 'Unknown'}: ${entry.value.totalGb?.toStringAsFixed(0) ?? '0'}GB",
+                                                          style: TextStyle(
+                                                            fontSize: 10,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color:
+                                                                entry
+                                                                        .value
+                                                                        .status ==
+                                                                    'Healthy'
+                                                                ? Colors.green
+                                                                : Colors.red,
+                                                          ),
                                                         ),
-                                                    child: Text(
-                                                      "${entry.value.name}: ${entry.value.totalGb.toStringAsFixed(0)}GB",
-                                                      style: TextStyle(
-                                                        fontSize: 10,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color:
-                                                            entry
-                                                                    .value
-                                                                    .status ==
-                                                                'Healthy'
-                                                            ? Colors.green
-                                                            : Colors.red,
                                                       ),
-                                                    ),
-                                                  ),
-                                                )
-                                                .toList(),
+                                                    )
+                                                    .toList() ??
+                                                [],
                                           ),
                                         ),
                                       ),
@@ -651,49 +594,52 @@ class HomeScreen extends StatelessWidget {
                       ),
 
                       /// Storage Distribution
-                      SizedBox(
-                        width: 180,
-                        height: 200,
-                        child: Card(
-                          color: Colors.white,
-                          elevation: 0,
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              children: [
-                                TitleWidget(
-                                  title: "Storage Distribution",
-                                  icon: FontAwesomeIcons.chartPie,
-                                ),
-                                const SizedBox(height: 4),
-                                Expanded(
-                                  child: ListView(
-                                    children: loginProvider
-                                        .filedata!
-                                        .storageDistribution
-                                        .entries
-                                        .map(
-                                          (entry) => Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              SubTitleWeidget(
-                                                subtitle: entry.key,
-                                                trailingText: "${entry.value}%",
-                                              ),
-                                              CustomDevider(),
-                                            ],
-                                          ),
-                                        )
-                                        .toList(),
+                      // Note: storageDistribution is not present in the new model.
+                      // This section is commented out as it cannot be directly supported.
+                      /*
+                        SizedBox(
+                          width: 180,
+                          height: 200,
+                          child: Card(
+                            color: Colors.white,
+                            elevation: 0,
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                children: [
+                                  TitleWidget(
+                                    title: "Storage Distribution",
+                                    icon: FontAwesomeIcons.chartPie,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(height: 4),
+                                  Expanded(
+                                    child: ListView(
+                                      children: loginProvider.filedata!.storageDistribution.entries
+                                          .map(
+                                            (entry) => Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                SubTitleWeidget(
+                                                  subtitle: entry.key,
+                                                  trailingText: "${entry.value}%",
+                                                ),
+                                                CustomDevider(),
+                                              ],
+                                            ),
+                                          )
+                                          .toList(),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
+                      */
 
                       /// Recording Status
+                      // Note: recordingStatuses is not present in the new model.
+                      // We can derive it from ipCameras' isRecording property.
                       SizedBox(
                         width: 180,
                         height: 200,
@@ -713,14 +659,16 @@ class HomeScreen extends StatelessWidget {
                                 Expanded(
                                   child: ListView.builder(
                                     physics: const ClampingScrollPhysics(),
-                                    itemCount: loginProvider
-                                        .filedata!
-                                        .recordingStatuses
-                                        .length,
+                                    itemCount:
+                                        loginProvider
+                                            .filedata!
+                                            .ipCameras
+                                            ?.length ??
+                                        0,
                                     itemBuilder: (context, index) {
-                                      final status = loginProvider
+                                      final camera = loginProvider
                                           .filedata!
-                                          .recordingStatuses[index];
+                                          .ipCameras![index];
                                       return Column(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
@@ -729,18 +677,19 @@ class HomeScreen extends StatelessWidget {
                                                 MainAxisAlignment.spaceBetween,
                                             children: [
                                               Text(
-                                                status.name,
+                                                camera.name ?? 'Unknown',
                                                 style: TextStyle(
                                                   color: Colors.black,
                                                   fontSize: 12,
                                                 ),
                                               ),
                                               Text(
-                                                status.status
+                                                camera.isRecording == true
                                                     ? "Recording"
                                                     : "Not Recording",
                                                 style: TextStyle(
-                                                  color: status.status
+                                                  color:
+                                                      camera.isRecording == true
                                                       ? Colors.black
                                                       : Colors.red,
                                                   fontSize: 10,
@@ -780,13 +729,13 @@ class HomeScreen extends StatelessWidget {
                                 SubTitleWeidget(
                                   subtitle: "Upload Speed",
                                   trailingText:
-                                      "${loginProvider.filedata!.network.uploadSpeedMbps} Mbps",
+                                      "${loginProvider.filedata!.network?.uploadSpeedMbps?.toStringAsFixed(1) ?? '0'} Mbps",
                                 ),
                                 const SizedBox(height: 8),
                                 SubTitleWeidget(
                                   subtitle: "Download Speed",
                                   trailingText:
-                                      "${loginProvider.filedata!.network.downloadSpeedMbps} Mbps",
+                                      "${loginProvider.filedata!.network?.downloadSpeedMbps?.toStringAsFixed(1) ?? '0'} Mbps",
                                 ),
                               ],
                             ),
@@ -811,43 +760,45 @@ class HomeScreen extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  "Total: ${loginProvider.filedata!.audioDevices.total}",
+                                  "Total: ${loginProvider.filedata!.audioDevices?.total?.toString() ?? '0'}",
                                 ),
                                 const SizedBox(height: 4),
                                 Expanded(
                                   child: ListView(
-                                    children: loginProvider
-                                        .filedata!
-                                        .audioDevices
-                                        .devices
-                                        .map(
-                                          (device) => Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
+                                    children:
+                                        loginProvider
+                                            .filedata!
+                                            .audioDevices
+                                            ?.devices
+                                            ?.map(
+                                              (device) => Column(
+                                                mainAxisSize: MainAxisSize.min,
                                                 children: [
-                                                  Text(
-                                                    device,
-                                                    style: TextStyle(
-                                                      color: Colors.black,
-                                                      fontSize: 12,
-                                                    ),
+                                                  Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceBetween,
+                                                    children: [
+                                                      Text(
+                                                        device,
+                                                        style: TextStyle(
+                                                          color: Colors.black,
+                                                          fontSize: 12,
+                                                        ),
+                                                      ),
+                                                      Icon(
+                                                        Icons.mic,
+                                                        color: Colors.blue,
+                                                        size: 16,
+                                                      ),
+                                                    ],
                                                   ),
-                                                  Icon(
-                                                    Icons.mic,
-                                                    color: Colors.blue,
-                                                    size: 16,
-                                                  ),
+                                                  CustomDevider(),
                                                 ],
                                               ),
-                                              CustomDevider(),
-                                            ],
-                                          ),
-                                        )
-                                        .toList(),
+                                            )
+                                            .toList() ??
+                                        [],
                                   ),
                                 ),
                               ],
@@ -876,19 +827,14 @@ class HomeScreen extends StatelessWidget {
                                 SubTitleWeidget(
                                   subtitle: "City",
                                   trailingText:
-                                      loginProvider.filedata!.location.city,
-                                ),
-                                const SizedBox(height: 8),
-                                SubTitleWeidget(
-                                  subtitle: "Country",
-                                  trailingText:
-                                      loginProvider.filedata!.location.country,
+                                      loginProvider.filedata!.location?.city ??
+                                      'Unknown',
                                 ),
                                 const SizedBox(height: 8),
                                 SubTitleWeidget(
                                   subtitle: "Coordinates",
                                   trailingText:
-                                      "${loginProvider.filedata!.location.latitude.toStringAsFixed(2)}, ${loginProvider.filedata!.location.longitude.toStringAsFixed(2)}",
+                                      "${loginProvider.filedata!.location?.latitude?.toStringAsFixed(2) ?? '0'}, ${loginProvider.filedata!.location?.longitude?.toStringAsFixed(2) ?? '0'}",
                                 ),
                               ],
                             ),

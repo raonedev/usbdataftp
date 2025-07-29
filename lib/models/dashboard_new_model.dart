@@ -192,12 +192,12 @@ class IpCamera {
 }
 
 class Cpu {
-  final int? usage;
+  final double? usage;
   final double? temperatureCelsius;
 
   Cpu({this.usage, this.temperatureCelsius});
 
-  Cpu copyWith({int? usage, double? temperatureCelsius}) {
+  Cpu copyWith({double? usage, double? temperatureCelsius}) {
     return Cpu(
       usage: usage ?? this.usage,
       temperatureCelsius: temperatureCelsius ?? this.temperatureCelsius,
@@ -210,7 +210,7 @@ class Cpu {
   };
 
   factory Cpu.fromMap(Map<String, dynamic> map) => Cpu(
-    usage: map['usage'],
+    usage: (map['usage'] as num?)?.toDouble(),
     temperatureCelsius: (map['temperature_celsius'] as num?)?.toDouble(),
   );
 
@@ -233,12 +233,12 @@ class Cpu {
 }
 
 class Gpu {
-  final int? usage;
+  final double? usage;
   final double? temperatureCelsius;
 
   Gpu({this.usage, this.temperatureCelsius});
 
-  Gpu copyWith({int? usage, double? temperatureCelsius}) {
+  Gpu copyWith({double? usage, double? temperatureCelsius}) {
     return Gpu(
       usage: usage ?? this.usage,
       temperatureCelsius: temperatureCelsius ?? this.temperatureCelsius,
@@ -251,7 +251,7 @@ class Gpu {
   };
 
   factory Gpu.fromMap(Map<String, dynamic> map) => Gpu(
-    usage: map['usage'],
+    usage: (map['usage'] as num?)?.toDouble(),
     temperatureCelsius: (map['temperature_celsius'] as num?)?.toDouble(),
   );
 
@@ -274,19 +274,21 @@ class Gpu {
 }
 
 class Ram {
-  final int? usage;
-  final int? totalGb;
+  final double? usage;
+  final double? totalGb;
 
   Ram({this.usage, this.totalGb});
 
-  Ram copyWith({int? usage, int? totalGb}) {
+  Ram copyWith({double? usage, double? totalGb}) {
     return Ram(usage: usage ?? this.usage, totalGb: totalGb ?? this.totalGb);
   }
 
   Map<String, dynamic> toMap() => {'usage': usage, 'total_gb': totalGb};
 
-  factory Ram.fromMap(Map<String, dynamic> map) =>
-      Ram(usage: map['usage'], totalGb: map['total_gb']);
+  factory Ram.fromMap(Map<String, dynamic> map) => Ram(
+    usage: (map['usage'] as num?)?.toDouble(),
+    totalGb: (map['total_gb'] as num?)?.toDouble(),
+  );
 
   String toJson() => json.encode(toMap());
 
@@ -305,12 +307,12 @@ class Ram {
 }
 
 class Storage {
-  final int? usage;
-  final int? totalGb;
+  final double? usage;
+  final double? totalGb;
 
   Storage({this.usage, this.totalGb});
 
-  Storage copyWith({int? usage, int? totalGb}) {
+  Storage copyWith({double? usage, double? totalGb}) {
     return Storage(
       usage: usage ?? this.usage,
       totalGb: totalGb ?? this.totalGb,
@@ -319,8 +321,10 @@ class Storage {
 
   Map<String, dynamic> toMap() => {'usage': usage, 'total_gb': totalGb};
 
-  factory Storage.fromMap(Map<String, dynamic> map) =>
-      Storage(usage: map['usage'], totalGb: map['total_gb']);
+  factory Storage.fromMap(Map<String, dynamic> map) => Storage(
+    usage: (map['usage'] as num?)?.toDouble(),
+    totalGb: (map['total_gb'] as num?)?.toDouble(),
+  );
 
   String toJson() => json.encode(toMap());
 
@@ -342,12 +346,12 @@ class Storage {
 class HardDisk {
   final String? name;
   final String? status;
-  final int? totalGb;
-  final int? usedGb;
+  final double? totalGb;
+  final double? usedGb;
 
   HardDisk({this.name, this.status, this.totalGb, this.usedGb});
 
-  HardDisk copyWith({String? name, String? status, int? totalGb, int? usedGb}) {
+  HardDisk copyWith({String? name, String? status, double? totalGb, double? usedGb}) {
     return HardDisk(
       name: name ?? this.name,
       status: status ?? this.status,
@@ -366,8 +370,8 @@ class HardDisk {
   factory HardDisk.fromMap(Map<String, dynamic> map) => HardDisk(
     name: map['name'],
     status: map['status'],
-    totalGb: map['total_gb'],
-    usedGb: map['used_gb'],
+    totalGb: (map['total_gb'] as num?)?.toDouble(),
+    usedGb: (map['used_gb'] as num?)?.toDouble(),
   );
 
   String toJson() => json.encode(toMap());

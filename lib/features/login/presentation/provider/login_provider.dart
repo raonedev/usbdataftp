@@ -7,10 +7,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ftpconnect/ftpconnect.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:usbdataftptest/helper.dart';
-import 'package:usbdataftptest/models/dashboard_new_model.dart';
+import '../../../../helper.dart';
+import '../../../../models/dashboard_new_model.dart';
 
-import '../../../../models/dashboard_model.dart';
 
 /// Represents the different states of the login process.
 enum LoginState { loading, loginSucess, loginFailed, noLogin }
@@ -83,8 +82,8 @@ class LoginProvider extends ChangeNotifier {
   // Flag to prevent concurrent initialization attempts
   bool _isInitializing = false;
 
-  DashboardModel? _fileData;
-  DashboardModel? get filedata => _fileData;
+  DashboardNewModel? _fileData;
+  DashboardNewModel? get filedata => _fileData;
 
   /// Initializes the tethering and FTP connection process.
   /// - Detects mobile tethering IP.
@@ -151,7 +150,7 @@ class LoginProvider extends ChangeNotifier {
                       // Retry safely without recursion
                       Future.microtask(() => initialized());
                     } else {
-                      _fileData = DashboardModel.fromMap(jsonData);
+                      _fileData = DashboardNewModel.fromMap(jsonData);
                       notifyListeners();
                       dev.log("data found");
                     }
@@ -283,11 +282,9 @@ class LoginProvider extends ChangeNotifier {
   }
 
   Future<void> checkingTempData() async {
-    final String response = await rootBundle.loadString('assets/abc.json');
+    final String response = await rootBundle.loadString('assets/abc2.json');
     final Map<String, dynamic> data = json.decode(response);
-    final DashboardNewModel dashboardNewModel= DashboardNewModel.fromMap(data);
-    dev.log(dashboardNewModel.toString());
-    _fileData = DashboardModel.fromMap(data);
+    _fileData = DashboardNewModel.fromMap(data);
     notifyListeners();
   }
 }
