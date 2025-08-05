@@ -7,8 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ftpconnect/ftpconnect.dart';
 import 'package:path_provider/path_provider.dart';
-import '../../../../helper.dart';
-import '../../../../models/dashboard_new_model.dart';
+import '../../../core/helper.dart';
+import '../../data/models/dashboard_new_model.dart';
 
 
 /// Represents the different states of the login process.
@@ -126,7 +126,6 @@ class LoginProvider extends ChangeNotifier {
               port: 2121,
               showLog: true,
             );
-
             try {
               _ftpConnectionState = FtpConnectionState.loading;
               notifyListeners();
@@ -211,11 +210,12 @@ class LoginProvider extends ChangeNotifier {
   }) async* {
     try {
       final dir = await getTemporaryDirectory();
-      final filePath = '${dir.path}/abc.json';
+      // final filePath = '${dir.path}/abc.json';
+      final filePath = '${dir.path}/system_status.json';
       final file = File(filePath);
 
       // Verify file exists before polling
-      final isFileExist = await ftpConnect.existFile('abc.json');
+      final isFileExist = await ftpConnect.existFile('system_status.json');
       if (!isFileExist) {
         dev.log("File not found on FTP server");
         yield null;
@@ -286,5 +286,11 @@ class LoginProvider extends ChangeNotifier {
     final Map<String, dynamic> data = json.decode(response);
     _fileData = DashboardNewModel.fromMap(data);
     notifyListeners();
+  }
+
+
+  /// disposing the login provider
+  Future<void> dispose()async{
+    
   }
 }

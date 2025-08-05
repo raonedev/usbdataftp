@@ -109,7 +109,7 @@ Future<String?> findPcIpByPingSubnet(String androidIp) async {
   if (parts.length != 4) return null;
 
   final subnet = '${parts[0]}.${parts[1]}.${parts[2]}';
-  const batchSize = 10;
+  const batchSize = 12;
 
   // Process IPs in batches
   for (int i = 1; i <= 255; i += batchSize) {

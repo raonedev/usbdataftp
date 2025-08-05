@@ -1,96 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
-import 'commom/widgets/gradient_progressbar.dart';
-import 'features/login/presentation/provider/login_provider.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
-import 'features/login/presentation/screens/login.dart';
-
-class DashBoardScreen extends StatefulWidget {
-  const DashBoardScreen({super.key});
-
-  @override
-  State<DashBoardScreen> createState() => _DashBoardScreenState();
-}
-
-class _DashBoardScreenState extends State<DashBoardScreen> {
-  bool _hasNavigatedToLogin = false;
-  int _selectedIndex = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   context.read<LoginProvider>().checkingTempData();
-    // });
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final loginProvider = context.watch<LoginProvider>();
-
-    return Scaffold(
-      backgroundColor: Color(0xFFF5F5F5),
-      body: Consumer<LoginProvider>(
-        builder: (context, loginProvider, child) {
-          // // Check if mobile tethering IP is NOT found AND we haven't navigated yet.
-          // if (!loginProvider.isMobileTetheringIpFound && !_hasNavigatedToLogin) {
-          //   // Set the flag to true IMMEDIATELY before scheduling the navigation.
-          //   // This is crucial to prevent re-triggering during subsequent rebuilds
-          //   // before the navigation actually completes.
-          //   _hasNavigatedToLogin = true;
-
-          //   // Use addPostFrameCallback to ensure navigation happens after the current
-          //   // build phase is complete, preventing errors.
-          //   WidgetsBinding.instance.addPostFrameCallback((_) {
-          //     // Ensure the widget is still in the tree before attempting navigation.
-          //     if (mounted) {
-          //       Navigator.pushReplacement(
-          //         context,
-          //         MaterialPageRoute(builder: (_) => const LoginScreen()),
-          //       );
-          //     }
-          //   });
-          // }
-          return child!;
-        },
-        child: IndexedStack(
-          index: _selectedIndex,
-          children: [
-            HomeScreen(loginProvider: loginProvider),
-            Center(child: Text("Np Recordings Found")),
-            // Center(child: Text("Setting screen")),
-          ],
-        ),
-      ),
-
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.white,
-        currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.file_present_rounded),
-            label: 'Recordings',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Setting'),
-        ],
-      ),
-    );
-  }
-}
+import '../../../commom/widgets/gradient_progressbar.dart';
+import '../provider/login_provider.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key, required this.loginProvider});
@@ -99,6 +15,12 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+      ),
+    );
     return context.watch<LoginProvider>().filedata == null
         ? Center(child: CupertinoActivityIndicator(color: Colors.black))
         : SafeArea(
@@ -240,12 +162,17 @@ class HomeScreen extends StatelessWidget {
                                 ),
                                 Spacer(),
                                 SubTitleWeidget(
-                                  subtitle:"Total: ${loginProvider.filedata!.ram?.totalGb?.toStringAsFixed(0) ?? '0'}GB",
-                                  trailingText:"${loginProvider.filedata!.ram?.usage}%",
+                                  subtitle:
+                                      "Total: ${loginProvider.filedata!.ram?.totalGb?.toStringAsFixed(0) ?? '0'}GB",
+                                  trailingText:
+                                      "${loginProvider.filedata!.ram?.usage}%",
                                 ),
                                 const SizedBox(height: 4),
                                 GradientProgressBar(
-                                  value: (loginProvider.filedata!.ram?.usage ??0)/100,
+                                  value:
+                                      (loginProvider.filedata!.ram?.usage ??
+                                          0) /
+                                      100,
                                 ),
                               ],
                             ),
@@ -434,162 +361,174 @@ class HomeScreen extends StatelessWidget {
                       SizedBox(
                         width: 180,
                         height: 200,
-                        child: Card(
-                          color: Colors.white,
-                          elevation: 0,
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              children: [
-                                TitleWidget(
-                                  title: "Hard Disk Health",
-                                  icon: FontAwesomeIcons.hardDrive,
-                                  iconColor: Colors.orange,
-                                ),
-                                const SizedBox(height: 4),
-                                Expanded(
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      // Chart
-                                      SizedBox(
-                                        width: 110,
-                                        height: 140,
-                                        child: SfCircularChart(
-                                          tooltipBehavior: TooltipBehavior(
-                                            enable: true,
-                                            builder:
-                                                (
-                                                  dynamic data,
-                                                  dynamic point,
-                                                  dynamic series,
-                                                  int pointIndex,
-                                                  int seriesIndex,
-                                                ) {
-                                                  final value = point.y
-                                                      .toStringAsFixed(1);
-                                                  return Container(
-                                                    padding: EdgeInsets.all(4),
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.black
-                                                          .withValues(
-                                                            alpha: 0.8,
-                                                          ),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            4,
-                                                          ),
-                                                    ),
-                                                    child: Text(
-                                                      '$value%',
-                                                      style: TextStyle(
-                                                        fontSize: 8,
-                                                        color: Colors.white,
-                                                      ),
-                                                    ),
-                                                  );
-                                                },
-                                            activationMode:
-                                                ActivationMode.singleTap,
-                                          ),
-                                          series: <CircularSeries>[
-                                            RadialBarSeries<ChartData, String>(
-                                              dataSource:
-                                                  loginProvider
-                                                      .filedata!
-                                                      .hardDisk
-                                                      ?.asMap()
-                                                      .entries
-                                                      .map((entry) {
-                                                        final disk =
-                                                            entry.value;
-                                                        return ChartData(
-                                                          disk.name ??
-                                                              'Unknown',
-                                                          ((disk.usedGb ?? 0) /
-                                                                  (disk.totalGb ??
-                                                                      1) *
-                                                                  100)
-                                                              .clamp(0, 100),
-                                                          disk.status ??
-                                                              'Unknown',
-                                                        );
-                                                      })
-                                                      .toList() ??
-                                                  [],
-                                              xValueMapper:
-                                                  (ChartData data, _) => data.x,
-                                              yValueMapper:
-                                                  (ChartData data, _) => data.y,
-                                              cornerStyle:
-                                                  CornerStyle.bothCurve,
-                                              gap: "5%",
-                                              radius: '100%',
-                                              innerRadius: '30%',
-                                              pointColorMapper:
-                                                  (ChartData data, _) =>
-                                                      data.status == 'Healthy'
-                                                      ? Colors.green
-                                                      : Colors.red,
-                                              dataLabelSettings:
-                                                  DataLabelSettings(
-                                                    isVisible: false,
-                                                  ),
-                                              maximumValue: 100,
-                                            ),
-                                          ],
-                                          annotations:
-                                              <CircularChartAnnotation>[],
+                        child: Builder(
+                          builder: (context) {
+                            final TooltipBehavior
+                            tooltipBehavior = TooltipBehavior(
+                              duration: 800,
+                              enable: true,
+                              activationMode: ActivationMode
+                                  .none, // We will control it manually
+                              builder:
+                                  (
+                                    dynamic data,
+                                    dynamic point,
+                                    dynamic series,
+                                    int pointIndex,
+                                    int seriesIndex,
+                                  ) {
+                                    final value = point.y.toStringAsFixed(1);
+                                    return Container(
+                                      padding: EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withOpacity(0.8),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        '$value%',
+                                        style: TextStyle(
+                                          fontSize: 8,
+                                          color: Colors.white,
                                         ),
                                       ),
-                                      // Annotations outside and to the right
-                                      Expanded(
-                                        child: SingleChildScrollView(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            mainAxisSize: MainAxisSize.max,
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children:
-                                                loginProvider.filedata!.hardDisk
-                                                    ?.asMap()
+                                    );
+                                  },
+                            );
+
+                            final hardDisks =
+                                loginProvider.filedata?.hardDisk ?? [];
+                            final chartData = hardDisks
+                                .map(
+                                  (disk) => ChartData(
+                                    disk.name ?? 'Unknown',
+                                    ((disk.usedGb ?? 0) /
+                                            (disk.totalGb ?? 1) *
+                                            100)
+                                        .clamp(0, 100),
+                                    disk.status ?? 'Unknown',
+                                  ),
+                                )
+                                .toList();
+
+                            return Card(
+                              color: Colors.white,
+                              elevation: 0,
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  children: [
+                                    TitleWidget(
+                                      title: "Hard Disk Health",
+                                      icon: FontAwesomeIcons.hardDrive,
+                                      iconColor: Colors.orange,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Expanded(
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          // Chart
+                                          SizedBox(
+                                            width: 110,
+                                            height: 140,
+                                            child: SfCircularChart(
+                                              tooltipBehavior: tooltipBehavior,
+                                              series: <CircularSeries>[
+                                                RadialBarSeries<
+                                                  ChartData,
+                                                  String
+                                                >(
+                                                  dataSource: chartData,
+                                                  xValueMapper:
+                                                      (ChartData data, _) =>
+                                                          data.x,
+                                                  yValueMapper:
+                                                      (ChartData data, _) =>
+                                                          data.y,
+                                                  cornerStyle:
+                                                      CornerStyle.bothCurve,
+                                                  gap: "5%",
+                                                  radius: '100%',
+                                                  innerRadius: '30%',
+                                                  pointColorMapper:
+                                                      (ChartData data, _) =>
+                                                          data.status ==
+                                                              'Healthy'
+                                                          ? Colors.green
+                                                          : Colors.red,
+                                                  dataLabelSettings:
+                                                      DataLabelSettings(
+                                                        isVisible: false,
+                                                      ),
+                                                  maximumValue: 100,
+                                                ),
+                                              ],
+                                              annotations:
+                                                  const <
+                                                    CircularChartAnnotation
+                                                  >[],
+                                            ),
+                                          ),
+                                          // Annotations outside and to the right
+                                          Expanded(
+                                            child: SingleChildScrollView(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                mainAxisSize: MainAxisSize.max,
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: hardDisks
+                                                    .asMap()
                                                     .entries
                                                     .map(
-                                                      (entry) => Padding(
-                                                        padding:
-                                                            const EdgeInsets.symmetric(
-                                                              vertical: 2,
+                                                      (
+                                                        entry,
+                                                      ) => GestureDetector(
+                                                        onTap: () {
+                                                          tooltipBehavior
+                                                              .showByIndex(
+                                                                0,
+                                                                entry.key,
+                                                              );
+                                                        },
+                                                        child: Padding(
+                                                          padding:
+                                                              const EdgeInsets.symmetric(
+                                                                vertical: 2,
+                                                              ),
+                                                          child: Text(
+                                                            "${entry.value.name ?? 'Unknown'}: ${entry.value.totalGb?.toStringAsFixed(0) ?? '0'}GB",
+                                                            style: TextStyle(
+                                                              fontSize: 10,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                              color:
+                                                                  entry
+                                                                          .value
+                                                                          .status ==
+                                                                      'Healthy'
+                                                                  ? Colors.green
+                                                                  : Colors.red,
                                                             ),
-                                                        child: Text(
-                                                          "${entry.value.name ?? 'Unknown'}: ${entry.value.totalGb?.toStringAsFixed(0) ?? '0'}GB",
-                                                          style: TextStyle(
-                                                            fontSize: 10,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            color:
-                                                                entry
-                                                                        .value
-                                                                        .status ==
-                                                                    'Healthy'
-                                                                ? Colors.green
-                                                                : Colors.red,
                                                           ),
                                                         ),
                                                       ),
                                                     )
-                                                    .toList() ??
-                                                [],
+                                                    .toList(),
+                                              ),
+                                            ),
                                           ),
-                                        ),
+                                        ],
                                       ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                          ),
+                              ),
+                            );
+                          },
                         ),
                       ),
 

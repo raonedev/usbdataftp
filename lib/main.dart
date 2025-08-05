@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'core/apptheme.dart';
-import 'features/login/presentation/provider/login_provider.dart';
-import 'features/login/presentation/screens/login.dart';
+import 'features/presentation/provider/login_provider.dart';
+import 'features/presentation/screens/login.dart';
 
 void main() {
   runApp(const MyApp());
