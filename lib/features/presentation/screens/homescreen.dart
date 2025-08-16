@@ -90,9 +90,7 @@ class HomeScreen extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  loginProvider.filedata!.unactiveCamera
-                                          ?.toString() ??
-                                      '0',
+                                  loginProvider.filedata!.unactiveCamera?.toString() ?? '0',
                                   style: TextStyle(
                                     color: Colors.black,
                                     fontSize: 32,
@@ -123,16 +121,13 @@ class HomeScreen extends StatelessWidget {
                                 ),
                                 Spacer(),
                                 SubTitleWeidget(
-                                  subtitle:
-                                      "Total: ${loginProvider.filedata!.storage?.totalGb?.toStringAsFixed(0) ?? '0'}GB",
-                                  trailingText:
-                                      "${((loginProvider.filedata!.storage?.usage ?? 0) / (loginProvider.filedata!.storage?.totalGb ?? 1) * 100).toStringAsFixed(0)}%",
+                                  subtitle: "Total: ${loginProvider.filedata!.storage?.totalGb?.toStringAsFixed(0) ?? '0'}GB",
+                                  trailingText: "${((loginProvider.filedata!.storage?.usage ?? 0) / (loginProvider.filedata!.storage?.totalGb ?? 1) * 100).toStringAsFixed(0)}%",
                                 ),
                                 const SizedBox(height: 4),
                                 GradientProgressBar(
                                   value:
-                                      (loginProvider.filedata!.storage?.usage ??
-                                          0) /
+                                      (loginProvider.filedata!.storage?.usage ??0) /
                                       (loginProvider
                                               .filedata!
                                               .storage
@@ -303,6 +298,9 @@ class HomeScreen extends StatelessWidget {
                                                   children: [
                                                     Text(
                                                       camera.name ?? 'Unknown',
+                                                      style: Theme.of(
+                                                        context,
+                                                      ).textTheme.labelMedium,
                                                     ),
                                                     Icon(
                                                       Icons.videocam,
@@ -336,6 +334,9 @@ class HomeScreen extends StatelessWidget {
                                                   children: [
                                                     Text(
                                                       camera.name ?? 'Unknown',
+                                                      style: Theme.of(
+                                                        context,
+                                                      ).textTheme.labelMedium,
                                                     ),
                                                     Icon(
                                                       Icons.videocam_off,
@@ -381,7 +382,9 @@ class HomeScreen extends StatelessWidget {
                                     return Container(
                                       padding: EdgeInsets.all(4),
                                       decoration: BoxDecoration(
-                                        color: Colors.black.withOpacity(0.8),
+                                        color: Colors.black.withValues(
+                                          alpha: 0.8,
+                                        ),
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
@@ -413,70 +416,80 @@ class HomeScreen extends StatelessWidget {
                             return Card(
                               color: Colors.white,
                               elevation: 0,
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Column(
-                                  children: [
-                                    TitleWidget(
+                              child: Column(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      top: 16,
+                                      left: 16,
+                                      right: 16,
+                                    ),
+                                    child: TitleWidget(
                                       title: "Hard Disk Health",
                                       icon: FontAwesomeIcons.hardDrive,
                                       iconColor: Colors.orange,
                                     ),
-                                    const SizedBox(height: 4),
-                                    Expanded(
-                                      child: Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          // Chart
-                                          SizedBox(
-                                            width: 110,
-                                            height: 140,
-                                            child: SfCircularChart(
-                                              tooltipBehavior: tooltipBehavior,
-                                              series: <CircularSeries>[
-                                                RadialBarSeries<
-                                                  ChartData,
-                                                  String
-                                                >(
-                                                  dataSource: chartData,
-                                                  xValueMapper:
-                                                      (ChartData data, _) =>
-                                                          data.x,
-                                                  yValueMapper:
-                                                      (ChartData data, _) =>
-                                                          data.y,
-                                                  cornerStyle:
-                                                      CornerStyle.bothCurve,
-                                                  gap: "5%",
-                                                  radius: '100%',
-                                                  innerRadius: '30%',
-                                                  pointColorMapper:
-                                                      (ChartData data, _) =>
-                                                          data.status ==
-                                                              'Healthy'
-                                                          ? Colors.green
-                                                          : Colors.red,
-                                                  dataLabelSettings:
-                                                      DataLabelSettings(
-                                                        isVisible: false,
-                                                      ),
-                                                  maximumValue: 100,
-                                                ),
-                                              ],
-                                              annotations:
-                                                  const <
-                                                    CircularChartAnnotation
-                                                  >[],
-                                            ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Expanded(
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        // Chart
+                                        SizedBox(
+                                          width: 110,
+                                          height: 140,
+                                          child: SfCircularChart(
+                                            tooltipBehavior: tooltipBehavior,
+                                            series: <CircularSeries>[
+                                              RadialBarSeries<
+                                                ChartData,
+                                                String
+                                              >(
+                                                dataSource: chartData,
+                                                xValueMapper:
+                                                    (ChartData data, _) =>
+                                                        data.x,
+                                                yValueMapper:
+                                                    (ChartData data, _) =>
+                                                        data.y,
+                                                cornerStyle:
+                                                    CornerStyle.bothCurve,
+                                                gap: "5%",
+                                                radius: '100%',
+                                                innerRadius: '30%',
+                                                pointColorMapper:
+                                                    (ChartData data, _) =>
+                                                        data.status == 'Healthy'
+                                                        ? Colors.green
+                                                        : Colors.red,
+                                                dataLabelSettings:
+                                                    DataLabelSettings(
+                                                      isVisible: false,
+                                                    ),
+                                                maximumValue: 100,
+                                              ),
+                                            ],
+                                            annotations:
+                                                const <
+                                                  CircularChartAnnotation
+                                                >[],
                                           ),
-                                          // Annotations outside and to the right
-                                          Expanded(
+                                        ),
+                                        // Annotations outside and to the right
+                                        Expanded(
+                                          child: Padding(
+                                            padding: const EdgeInsets.only(
+                                              right: 16,
+                                              bottom: 16,
+                                            ),
                                             child: SingleChildScrollView(
                                               child: Column(
                                                 crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                mainAxisSize: MainAxisSize.max,
+                                                    CrossAxisAlignment.end,
                                                 mainAxisAlignment:
                                                     MainAxisAlignment.center,
                                                 children: hardDisks
@@ -500,6 +513,8 @@ class HomeScreen extends StatelessWidget {
                                                               ),
                                                           child: Text(
                                                             "${entry.value.name ?? 'Unknown'}: ${entry.value.totalGb?.toStringAsFixed(0) ?? '0'}GB",
+                                                            textAlign: TextAlign
+                                                                .center,
                                                             style: TextStyle(
                                                               fontSize: 10,
                                                               fontWeight:
@@ -521,11 +536,11 @@ class HomeScreen extends StatelessWidget {
                                               ),
                                             ),
                                           ),
-                                        ],
-                                      ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
                             );
                           },
@@ -599,15 +614,9 @@ class HomeScreen extends StatelessWidget {
                                   child: ListView.builder(
                                     physics: const ClampingScrollPhysics(),
                                     itemCount:
-                                        loginProvider
-                                            .filedata!
-                                            .ipCameras
-                                            ?.length ??
-                                        0,
+                                        loginProvider.filedata!.ipCameras?.length ??0,
                                     itemBuilder: (context, index) {
-                                      final camera = loginProvider
-                                          .filedata!
-                                          .ipCameras![index];
+                                      final camera = loginProvider.filedata!.ipCameras![index];
                                       return Column(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
@@ -617,22 +626,21 @@ class HomeScreen extends StatelessWidget {
                                             children: [
                                               Text(
                                                 camera.name ?? 'Unknown',
-                                                style: TextStyle(
-                                                  color: Colors.black,
-                                                  fontSize: 12,
-                                                ),
+                                                style: Theme.of(
+                                                  context,
+                                                ).textTheme.labelMedium,
                                               ),
-                                              Text(
+                                              Icon(
                                                 camera.isRecording == true
-                                                    ? "Recording"
-                                                    : "Not Recording",
-                                                style: TextStyle(
-                                                  color:
-                                                      camera.isRecording == true
-                                                      ? Colors.black
-                                                      : Colors.red,
-                                                  fontSize: 10,
-                                                ),
+                                                    ? CupertinoIcons
+                                                          .checkmark_circle_fill
+                                                    : CupertinoIcons.clear_thick_circled,
+                                                size: 16,
+                                                        color:
+                                                          camera.isRecording ==
+                                                              true
+                                                          ? Colors.green
+                                                          : Colors.red,
                                               ),
                                             ],
                                           ),

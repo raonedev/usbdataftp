@@ -20,9 +20,6 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
   @override
   void initState() {
     super.initState();
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   context.read<LoginProvider>().checkingTempData();
-    // });
   }
 
   @override
@@ -64,7 +61,6 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
           children: [
             HomeScreen(loginProvider: loginProvider),
             Recordingscreen(),
-            // Center(child: Text("Setting screen")),
           ],
         ),
       ),
@@ -83,7 +79,6 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
             icon: Icon(CupertinoIcons.folder),
             label: 'Recordings',
           ),
-          // BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Setting'),
         ],
       ),
     );

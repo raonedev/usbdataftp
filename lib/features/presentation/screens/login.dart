@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
@@ -23,14 +22,18 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     loginProvider = context.read<LoginProvider>();
+    loginProvider.addListener(_checkAndShowDialog);
+
     loginProvider.initialized();
 
-    // Listen to changes after frame build
+    // Perform an initial check AFTER registering the listener and starting initialized()
+    // Use addPostFrameCallback to ensure the first frame is built and context is ready for showDialog
     // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   loginProvider.addListener(_checkAndShowDialog);
+    //   _checkAndShowDialog();
     // });
   }
 
+  ///df --output=used /dev/${diskName}* | tail -n 1
   @override
   void dispose() {
     loginProvider.removeListener(_checkAndShowDialog);
@@ -51,10 +54,13 @@ class _LoginScreenState extends State<LoginScreen> {
               builder: (context, loginProvider, _) {
                 return Dialog(
                   backgroundColor: Colors.transparent,
-
                   child: Card(
                     child: Padding(
-                      padding: const EdgeInsets.only(left: 16,right: 16,bottom: 16),
+                      padding: const EdgeInsets.only(
+                        left: 16,
+                        right: 16,
+                        bottom: 16,
+                      ),
                       child: SingleChildScrollView(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -80,7 +86,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                             .labelSmall
                                             ?.copyWith(color: Colors.black54),
                                         children: [
-                                          TextSpan(text: 'Step 1: Connect your '),
+                                          TextSpan(
+                                            text: 'Step 1: Connect your ',
+                                          ),
                                           TextSpan(
                                             text: 'Android',
                                             style: TextStyle(
@@ -132,16 +140,19 @@ class _LoginScreenState extends State<LoginScreen> {
                                 },
                               ),
                             ],
-                            if (loginProvider.isUsbTethering && !loginProvider.isDeviceTethering)
+                            if (loginProvider.isUsbTethering &&
+                                !loginProvider.isDeviceTethering)
                               Text(
                                 'Authenticating & Searching Device...\nIt generaly take less than 1 minute.',
                                 textAlign: TextAlign.center,
                                 style: Theme.of(context).textTheme.labelSmall
                                     ?.copyWith(color: Colors.black54),
                               ),
-                            if (loginProvider.ftpConnectionState == FtpConnectionState.loading)
+                            if (loginProvider.ftpConnectionState ==
+                                FtpConnectionState.loading)
                               Text('Recoznizing device...'),
-                            if (loginProvider.ftpConnectionState == FtpConnectionState.fialed)
+                            if (loginProvider.ftpConnectionState ==
+                                FtpConnectionState.failed)
                               Text(
                                 'Failed to make connection\nRetrying...',
                                 textAlign: TextAlign.center,
@@ -204,8 +215,8 @@ class PortraitView extends StatelessWidget {
     return Center(
       child: ConstrainedBox(
         constraints: BoxConstraints(
-        maxWidth: 500.0, // Sets the maximum width to 300 pixels
-      ),
+          maxWidth: 500.0, // Sets the maximum width to 300 pixels
+        ),
         child: Card(
           child: Padding(
             padding: EdgeInsetsGeometry.all(16),
@@ -246,7 +257,7 @@ class PortraitView extends StatelessWidget {
                       : () async {
                           await loginProvider.loginSubmit();
                           if (loginProvider.loginState ==
-                              LoginState.loginSucess) {
+                              LoginState.loginSuccess) {
                             if (!context.mounted) return;
                             loginProvider.checkingTempData();
                             Navigator.pushReplacement(
@@ -256,7 +267,7 @@ class PortraitView extends StatelessWidget {
                               ),
                             );
                           }
-            
+
                           // if (loginProvider.usernameController.text.isEmpty ||
                           //     loginProvider.passwordController.text.isEmpty) {
                           //   ScaffoldMessenger.of(context).showSnackBar(
@@ -270,7 +281,7 @@ class PortraitView extends StatelessWidget {
                           //   ScaffoldMessenger.of(context).showSnackBar(
                           //     SnackBar(
                           //       content: Text(
-                          //         "Please wait for fetching data.",
+                          //         "Please wait for making connection.",
                           //       ),
                           //     ),
                           //   );
@@ -305,8 +316,9 @@ class PortraitView extends StatelessWidget {
                     end: Alignment.bottomRight,
                   ),
                   child: loginProvider.loginState == LoginState.loading
-                      ? Transform.scale(
-                          scale: 0.7,
+                      ? SizedBox(
+                          width: 20,
+                          height: 20,
                           child: CircularProgressIndicator(
                             color: Colors.white,
                             strokeWidth: 2,
@@ -553,7 +565,7 @@ class LandScapeView extends StatelessWidget {
 }
 
 
-*/
+
 
 
 class CustomSteps extends StatelessWidget {
@@ -691,6 +703,7 @@ class CustomVerticalSteps extends StatelessWidget {
   }
 }
 
+*/
 
 /*
           Card(

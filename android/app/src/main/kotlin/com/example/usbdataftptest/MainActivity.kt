@@ -72,9 +72,9 @@ class MainActivity : FlutterActivity() {
 
     private fun getUsbTetheredIp(): String? {
         val interfaces = NetworkInterface.getNetworkInterfaces()
-        Log.d("DEBUG", "Available interfaces:")
+        // Log.d("DEBUG", "Available interfaces:")
         for (iface in interfaces) {
-            Log.d("DEBUG", "Interface: ${iface.name}")
+            // Log.d("DEBUG", "Interface: ${iface.name}")
             val name = iface.name
             if (name.contains("rndis") || name.contains("usb")) {  // <- RNDIS or USB tethering
                 val addresses = iface.inetAddresses

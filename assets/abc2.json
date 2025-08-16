@@ -1,36 +1,82 @@
 {
-    "active_camera": 5,
-    "unactive_camera": 1,
     "ip_cameras": [
         {
-            "name": "camera 1",
-            "isRecording": true,
-            "isActive": true
-        },
-        {
-            "name": "camera 3",
-            "isRecording": true,
-            "isActive": true
-        },
-        {
-            "name": "camera 5",
-            "isRecording": true,
-            "isActive": true
-        },
-        {
-            "name": "camera 6",
-            "isRecording": true,
-            "isActive": true
-        },
-        {
-            "name": "camera 7",
-            "isRecording": true,
-            "isActive": true
-        },
-        {
-            "name": "camera 2",
+            "name": "192.168.29.188",
+            "host": "192.168.29.188",
+            "port": 80,
+            "ip_address": "192.168.29.188",
+            "mac_address": "18:74:E2:D2:78:75",
+            "connection_status_db": 1,
             "isRecording": false,
-            "isActive": false
+            "isActive": true,
+            "legacy_id": 133,
+            "ping_success": true,
+            "http_accessible": true
+        },
+        {
+            "name": "192.168.29.204",
+            "host": "192.168.29.204",
+            "port": 8088,
+            "ip_address": "192.168.29.204",
+            "mac_address": "18:74:E2:D1:96:91",
+            "connection_status_db": 1,
+            "isRecording": true,
+            "isActive": true,
+            "legacy_id": 131,
+            "ping_success": true,
+            "http_accessible": true
+        },
+        {
+            "name": "192.168.29.203",
+            "host": "192.168.29.203",
+            "port": 8088,
+            "ip_address": "192.168.29.203",
+            "mac_address": "18:74:E2:D1:96:89",
+            "connection_status_db": 1,
+            "isRecording": false,
+            "isActive": true,
+            "legacy_id": 134,
+            "ping_success": true,
+            "http_accessible": true
+        },
+        {
+            "name": "192.168.29.200",
+            "host": "192.168.29.200",
+            "port": 80,
+            "ip_address": "192.168.29.200",
+            "mac_address": "00:14:D3:A6:1C:6F",
+            "connection_status_db": 1,
+            "isRecording": false,
+            "isActive": true,
+            "legacy_id": 138,
+            "ping_success": true,
+            "http_accessible": true
+        },
+        {
+            "name": "192.168.29.58",
+            "host": "192.168.29.58",
+            "port": 80,
+            "ip_address": "192.168.29.58",
+            "mac_address": "18:74:E2:D1:AE:2C",
+            "connection_status_db": 1,
+            "isRecording": false,
+            "isActive": false,
+            "legacy_id": 135,
+            "ping_success": false,
+            "http_accessible": false
+        },
+        {
+            "name": "192.168.29.214",
+            "host": "192.168.29.214",
+            "port": 80,
+            "ip_address": "192.168.29.214",
+            "mac_address": "18:74:E2:D1:AE:2C",
+            "connection_status_db": 1,
+            "isRecording": false,
+            "isActive": false,
+            "legacy_id": 130,
+            "ping_success": false,
+            "http_accessible": false
         }
     ],
     "cpu": {

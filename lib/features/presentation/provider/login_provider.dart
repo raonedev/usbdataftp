@@ -10,12 +10,11 @@ import 'package:path_provider/path_provider.dart';
 import '../../../core/helper.dart';
 import '../../data/models/dashboard_new_model.dart';
 
-
 /// Represents the different states of the login process.
-enum LoginState { loading, loginSucess, loginFailed, noLogin }
+enum LoginState { loading, loginSuccess, loginFailed, noLogin }
 
 /// Represents the different states of the ftp connection
-enum FtpConnectionState { loading, sucess, fialed, none }
+enum FtpConnectionState { loading, success, failed, none }
 
 /// LoginProvider manages:
 /// 1. USB tethering status.
@@ -26,17 +25,30 @@ class LoginProvider extends ChangeNotifier {
   /// Describes the overall flow:
   /// USB detected -> USB tethering enabled -> Device IP found -> FTP connection -> Data retrieval.
 
+  // ---- Constants ----
+  static const String _ftpUsername = 'myuser';
+  static const String _ftpPassword = 'mypassword';
+  static const int _ftpPort = 2121;
+  static const String _ftpFileName = 'system_status.json';
+  // static const String _fallbackFileName = 'abc.json';
+  static const Duration _retryDelay = Duration(seconds: 3);
+  static const Duration _pollingInterval = Duration(seconds: 3);
+  static const String _adminUsername = 'admin';
+  static const String _adminPassword = 'admin123';
+
   // ---- USB Tethering & IP Detection State ----
   bool _isUsbTethering = false;
   bool get isUsbTethering => _isUsbTethering;
 
   bool _isMobileTetheringIpFound = false;
   bool get isMobileTetheringIpFound => _isMobileTetheringIpFound;
+
   String? _mobileTetheringIp;
   String? get mobileTetheringIP => _mobileTetheringIp;
 
   bool _isDeviceTethering = false;
   bool get isDeviceTethering => _isDeviceTethering;
+
   String? _deviceTetheringIP;
   String? get deviceTetheringIP => _deviceTetheringIP;
 
@@ -45,30 +57,19 @@ class LoginProvider extends ChangeNotifier {
   bool get isFTPConnected => _isFTPConnected;
 
   FTPConnect? _ftpConnect;
-  StreamSubscription? _ftpSub;
+  StreamSubscription? _ftpSubscription;
+  Timer? _reconnectionTimer;
 
   // ---- Login Controllers ----
-  TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
   TextEditingController get usernameController => _usernameController;
-  set usernameController(TextEditingController value) {
-    _usernameController = value;
-    notifyListeners();
-  }
 
-  TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
   TextEditingController get passwordController => _passwordController;
-  set passwordController(TextEditingController value) {
-    _passwordController = value;
-    notifyListeners();
-  }
 
   // ---- Login State ----
   LoginState _loginState = LoginState.noLogin;
   LoginState get loginState => _loginState;
-  set loginState(LoginState value) {
-    _loginState = value;
-    notifyListeners();
-  }
 
   String? _loginErrorMessage;
   String? get loginErrorMessage => _loginErrorMessage;
@@ -76,221 +77,444 @@ class LoginProvider extends ChangeNotifier {
   // --- Ftp connection State ---
   FtpConnectionState _ftpConnectionState = FtpConnectionState.none;
   FtpConnectionState get ftpConnectionState => _ftpConnectionState;
+
   String? _ftpErrorMessage;
-  String? get ftpErrorMessage=>_ftpErrorMessage;
+  String? get ftpErrorMessage => _ftpErrorMessage;
 
   // Flag to prevent concurrent initialization attempts
   bool _isInitializing = false;
+  bool _disposed = false;
 
   DashboardNewModel? _fileData;
   DashboardNewModel? get filedata => _fileData;
 
   /// Initializes the tethering and FTP connection process.
-  /// - Detects mobile tethering IP.
-  /// - Pings or finds the device (PC) IP on the same subnet.
-  /// - Establishes an FTP connection.
-  /// - Listens for a JSON file periodically
   Future<void> initialized() async {
-    if (_isInitializing || _isFTPConnected) return;
+    if (_disposed || _isInitializing) return;
+
     _isInitializing = true;
-
-    while (!_isFTPConnected) {
-      _ftpErrorMessage=null;
-      try {
-        // Attempt to retrieve mobile device IP (via tethering).
-        _mobileTetheringIp = await getTetheringMobileIP();
-        if (_mobileTetheringIp != null) {
-          _isUsbTethering = true;
-          _isMobileTetheringIpFound = true;
-          dev.log("tethering connected");
-          notifyListeners();
-          // If previous PC IP exists, try pinging to verify it's still valid.
-          if (_deviceTetheringIP != null) {
-            _deviceTetheringIP = await pingSingleIp(_deviceTetheringIP!);
-            dev.log("Checked last known IP: $_deviceTetheringIP");
-          }
-          // If still null, discover the PC IP by pinging the subnet.
-          _deviceTetheringIP ??= await findPcIpByPingSubnet(
-            _mobileTetheringIp!,
-          );
-
-          if (_deviceTetheringIP != null) {
-            _isDeviceTethering = true;
-            notifyListeners();
-            dev.log("Device (PC) IP found: $_deviceTetheringIP");
-            // Setup FTP connection
-            _ftpConnect = FTPConnect(
-              _deviceTetheringIP!,
-              user: 'myuser',
-              pass: 'mypassword',
-              port: 2121,
-              showLog: true,
-            );
-            try {
-              _ftpConnectionState = FtpConnectionState.loading;
-              notifyListeners();
-              final connected = await _ftpConnect!.connect();
-              if (connected) {
-                _isFTPConnected = true;
-                _ftpConnectionState = FtpConnectionState.sucess;
-                _ftpErrorMessage=null;
-                notifyListeners();
-                dev.log("FTP connected to $_deviceTetheringIP");
-                // Start listening to FTP file stream
-                _ftpSub = getFtpFileStreamData(ftpConnect: _ftpConnect!).listen(
-                  (jsonData) async {
-                    if (jsonData == null) {
-                      // JSON file disappeared or became invalid — restart logic
-                      dev.log("Null JSON received from FTP, restarting...");
-                      await _ftpSub?.cancel();
-                      _ftpSub = null;
-                      _isFTPConnected = false;
-                      notifyListeners();
-                      // Retry safely without recursion
-                      Future.microtask(() => initialized());
-                    } else {
-                      _fileData = DashboardNewModel.fromMap(jsonData);
-                      notifyListeners();
-                      dev.log("data found");
-                    }
-                  },
-                );
-                break; // Exit retry loop on successful connection
-              } else {
-                // Connection failed
-                dev.log("FTP connection rejected.");
-                _ftpConnectionState = FtpConnectionState.fialed;
-                _ftpErrorMessage="Failed to fetching data.";
-                _isFTPConnected = false;
-                notifyListeners();
-              }
-            } catch (ftpError, ftpStack) {
-              _ftpConnectionState = FtpConnectionState.fialed;
-              _ftpErrorMessage="Failed to fetching data.";
-              notifyListeners();
-              dev.log(
-                "FTP connection failed",
-                error: ftpError,
-                stackTrace: ftpStack,
-              );
-            }
-          } else {
-            // Device (PC) IP not found
-            _isDeviceTethering = false;
-            dev.log("Device tethering disconnected or not found.");
-            notifyListeners();
-          }
-        } else {
-          // USB Tethering not active
-          _isUsbTethering = false;
-          _isMobileTetheringIpFound = false;
-          _isDeviceTethering = false;
-          dev.log("usb tethering false");
-          notifyListeners();
-        }
-      } catch (e, s) {
-        dev.log("Exception during initialization", error: e, stackTrace: s);
-      }
-
-      // Wait before next retry attempt
-      dev.log("Retrying FTP connection in 3 seconds...");
-      await Future.delayed(Duration(seconds: 3));
+    _clearErrorMessages();
+    try {
+      await _initializeConnection();
+    } catch (e, s) {
+      dev.log("Exception during initialization", error: e, stackTrace: s);
+      _handleConnectionError("Initialization failed: ${e.toString()}");
+    } finally {
+      _isInitializing = false;
     }
-    _isInitializing = false;
   }
 
-  /// Creates a stream that periodically fetches and yields JSON data
-  /// from the FTP server (`abc.json` file).
-  ///
-  /// - Checks if the file exists first.
-  /// - Downloads and parses it every 3 seconds.
-  /// - If an error occurs or file is missing, yields `null`.
-  Stream<Map<String, dynamic>?> getFtpFileStreamData({
-    required FTPConnect ftpConnect,
-  }) async* {
+  /// Private method to handle the connection initialization logic
+  Future<void> _initializeConnection() async {
+    while (!_isFTPConnected && !_disposed) {
+      try {
+        // Step 1: Detect mobile tethering IP
+        if (!await _detectMobileTetheringIP()) {
+          await _waitBeforeRetry();
+          continue;
+        }
+
+        // Step 2: Find device IP
+        if (!await _findDeviceIP()) {
+          await _waitBeforeRetry();
+          continue;
+        }
+
+        // Step 3: Establish FTP connection
+        if (!await _establishFTPConnection()) {
+          await _waitBeforeRetry();
+          continue;
+        }
+
+        // Step 4: Start data polling
+        _startDataPolling();
+        break; // Success - exit retry loop
+      } catch (e, s) {
+        dev.log("Connection attempt failed", error: e, stackTrace: s);
+        _handleConnectionError(e.toString());
+        await _waitBeforeRetry();
+      }
+    }
+  }
+
+  /// Detects mobile tethering IP
+  Future<bool> _detectMobileTetheringIP() async {
+    _mobileTetheringIp = await getTetheringMobileIP();
+
+    if (_mobileTetheringIp != null) {
+      _updateTetheringState(
+        isUsbTethering: true,
+        isMobileTetheringIpFound: true,
+      );
+      dev.log("Mobile tethering IP found: $_mobileTetheringIp");
+      return true;
+    } else {
+      _updateTetheringState(
+        isUsbTethering: false,
+        isMobileTetheringIpFound: false,
+        isDeviceTethering: false,
+      );
+      dev.log("Mobile tethering not active");
+      return false;
+    }
+  }
+
+  /// Finds device (PC) IP
+  Future<bool> _findDeviceIP() async {
+    // Try previous known IP first
+    if (_deviceTetheringIP != null) {
+      final validIP = await pingSingleIp(_deviceTetheringIP!);
+      if (validIP != null) {
+        _deviceTetheringIP = validIP;
+        dev.log("Previous device IP still valid: $_deviceTetheringIP");
+        _isDeviceTethering = true;
+        notifyListeners();
+        return true;
+      }
+    }
+
+    // Discover new IP by pinging subnet
+    _deviceTetheringIP = await findPcIpByPingSubnet(_mobileTetheringIp!);
+
+    if (_deviceTetheringIP != null) {
+      _isDeviceTethering = true;
+      notifyListeners();
+      dev.log("Device IP found: $_deviceTetheringIP");
+      return true;
+    } else {
+      _isDeviceTethering = false;
+      notifyListeners();
+      dev.log("Device IP not found");
+      return false;
+    }
+  }
+
+  /// Establishes FTP connection
+  Future<bool> _establishFTPConnection() async {
+    _ftpConnect = FTPConnect(
+      _deviceTetheringIP!,
+      user: _ftpUsername,
+      pass: _ftpPassword,
+      port: _ftpPort,
+      showLog: true,
+    );
+
+    try {
+      _updateFTPState(FtpConnectionState.loading);
+
+      final connected = await _ftpConnect!.connect();
+
+      if (connected) {
+        _isFTPConnected = true;
+        _updateFTPState(FtpConnectionState.success, clearError: true);
+        dev.log("FTP connected to $_deviceTetheringIP");
+        return true;
+      } else {
+        _handleFTPConnectionFailure("FTP connection rejected");
+        return false;
+      }
+    } catch (e, s) {
+      dev.log("FTP connection failed", error: e, stackTrace: s);
+      _handleFTPConnectionFailure(
+        "Failed to establish FTP connection: ${e.toString()}",
+      );
+      return false;
+    }
+  }
+
+  /// Starts data polling from FTP
+  void _startDataPolling() {
+    _ftpSubscription?.cancel();
+    _ftpSubscription = _getFtpFileStreamData().listen(
+      _handleFTPData,
+      onError: _handleFTPStreamError,
+      onDone: _handleFTPStreamDone,
+    );
+  }
+
+  /// Handles FTP data reception
+  void _handleFTPData(Map<String, dynamic>? jsonData) {
+    if (_disposed) return;
+
+    if (jsonData == null) {
+      dev.log("Null JSON received from FTP, restarting connection...");
+      _reconnectFTP();
+    } else {
+      try {
+        _fileData = DashboardNewModel.fromMap(jsonData);
+        notifyListeners();
+        dev.log("Data successfully parsed and updated");
+      } catch (e, s) {
+        dev.log("Error parsing JSON data", error: e, stackTrace: s);
+        _handleConnectionError("Data parsing error: ${e.toString()}");
+      }
+    }
+  }
+
+  /// Handles FTP stream errors
+  void _handleFTPStreamError(dynamic error, StackTrace stackTrace) {
+    dev.log("FTP stream error", error: error, stackTrace: stackTrace);
+    _reconnectFTP();
+  }
+
+  /// Handles FTP stream completion
+  void _handleFTPStreamDone() {
+    dev.log("FTP stream completed");
+    _reconnectFTP();
+  }
+
+  /// Reconnects FTP after a delay
+  void _reconnectFTP() {
+    if (_disposed) return;
+
+    _cleanupFTPConnection();
+
+    _reconnectionTimer?.cancel();
+    _reconnectionTimer = Timer(_retryDelay, () {
+      if (!_disposed) {
+        initialized();
+      }
+    });
+  }
+
+  /// Creates a stream that periodically fetches JSON data from FTP
+  Stream<Map<String, dynamic>?> _getFtpFileStreamData() async* {
+    if (_ftpConnect == null || _disposed) return;
+
     try {
       final dir = await getTemporaryDirectory();
-      // final filePath = '${dir.path}/abc.json';
-      final filePath = '${dir.path}/system_status.json';
+      final filePath = '${dir.path}/$_ftpFileName';
       final file = File(filePath);
 
-      // Verify file exists before polling
-      final isFileExist = await ftpConnect.existFile('system_status.json');
-      if (!isFileExist) {
-        dev.log("File not found on FTP server");
+      // Check if file exists on FTP server
+      if (!await _ftpConnect!.existFile(_ftpFileName)) {
+        dev.log("File $_ftpFileName not found on FTP server");
         yield null;
-        await ftpConnect.disconnect();
         return;
       }
 
-      // Start polling the file every 3 seconds
-      while (true) {
+      // Start polling
+      while (_isFTPConnected && !_disposed) {
         try {
-          final downloaded = await ftpConnect.downloadFile('abc.json', file);
-          if (downloaded) {
+          final downloaded = await _ftpConnect!.downloadFile(
+            _ftpFileName,
+            file,
+          );
+
+          if (downloaded && await file.exists()) {
             final fileContents = await file.readAsString();
             final decodedJson = jsonDecode(fileContents);
             yield decodedJson;
           } else {
-            dev.log("Download failed");
+            dev.log("Download failed for $_ftpFileName");
             yield null;
-            break; // Stop polling on download failure
+            break;
           }
         } catch (e, s) {
-          dev.log("Error during FTP polling", error: e, stackTrace: s);
+          dev.log("Error during FTP file polling", error: e, stackTrace: s);
           yield null;
-          break; // Exit polling loop
+          break;
         }
 
-        await Future.delayed(Duration(seconds: 3));
+        await Future.delayed(_pollingInterval);
       }
     } catch (e, s) {
-      dev.log("Exception while connecting FTP", error: e, stackTrace: s);
+      dev.log("Exception in FTP file stream", error: e, stackTrace: s);
       yield null;
     }
   }
 
-  /// Validates login credentials against static values.
-  ///
-  /// - Updates login state accordingly.
-  /// - Admin login: username `admin`, password `admin123`.
+  /// Validates login credentials
   Future<void> loginSubmit() async {
-    _loginState = LoginState.loading;
-    notifyListeners();
+    if (_disposed) return;
+
+    _updateLoginState(LoginState.loading);
+
     try {
-      if (_usernameController.text.isNotEmpty &&
-          _passwordController.text.isNotEmpty &&
-          _usernameController.text.trim() == "admin" &&
-          _passwordController.text.trim() == "admin123") {
-        _loginState = LoginState.loginSucess;
-        _loginErrorMessage = null;
-        _ftpConnectionState = FtpConnectionState.none;
-        dev.log("login success");
-        notifyListeners();
+      await Future.delayed(
+        const Duration(milliseconds: 500),
+      ); // Simulate network delay
+
+      final username = _usernameController.text.trim();
+      final password = _passwordController.text.trim();
+
+      if (_validateCredentials(username, password)) {
+        _updateLoginState(LoginState.loginSuccess, clearError: true);
+        _updateFTPState(FtpConnectionState.none);
+        dev.log("Login successful");
       } else {
-        dev.log("incorrect username OR password");
-        _loginErrorMessage = "incorrect username OR password";
-        _loginState = LoginState.loginFailed;
-        notifyListeners();
+        _updateLoginState(
+          LoginState.loginFailed,
+          errorMessage: "Incorrect username or password",
+        );
+        dev.log("Login failed: Invalid credentials");
       }
-    } catch (e) {
-      dev.log("Exception while login");
-      _loginErrorMessage = "Something went wrong";
-      _loginState = LoginState.loginFailed;
+    } catch (e, s) {
+      dev.log("Exception during login", error: e, stackTrace: s);
+      _updateLoginState(
+        LoginState.loginFailed,
+        errorMessage: "Something went wrong during login",
+      );
+    }
+  }
+
+  /// Validates user credentials
+  bool _validateCredentials(String username, String password) {
+    return username.isNotEmpty &&
+        password.isNotEmpty &&
+        username == _adminUsername &&
+        password == _adminPassword;
+  }
+
+  /// Loads temporary test data from assets
+  Future<void> checkingTempData() async {
+    if (_disposed) return;
+
+    try {
+      final String response = await rootBundle.loadString('assets/abc2.json');
+      final Map<String, dynamic> data = json.decode(response);
+      _fileData = DashboardNewModel.fromMap(data);
+      notifyListeners();
+      dev.log("Temporary data loaded successfully");
+    } catch (e, s) {
+      dev.log("Error loading temporary data", error: e, stackTrace: s);
+    }
+  }
+
+  // ---- Helper Methods ----
+
+  /// Updates tethering state and notifies listeners
+  void _updateTetheringState({
+    bool? isUsbTethering,
+    bool? isMobileTetheringIpFound,
+    bool? isDeviceTethering,
+  }) {
+    bool shouldNotify = false;
+
+    if (isUsbTethering != null && _isUsbTethering != isUsbTethering) {
+      _isUsbTethering = isUsbTethering;
+      shouldNotify = true;
+    }
+
+    if (isMobileTetheringIpFound != null &&
+        _isMobileTetheringIpFound != isMobileTetheringIpFound) {
+      _isMobileTetheringIpFound = isMobileTetheringIpFound;
+      shouldNotify = true;
+    }
+
+    if (isDeviceTethering != null && _isDeviceTethering != isDeviceTethering) {
+      _isDeviceTethering = isDeviceTethering;
+      shouldNotify = true;
+    }
+
+    if (shouldNotify) {
       notifyListeners();
     }
   }
 
-  Future<void> checkingTempData() async {
-    final String response = await rootBundle.loadString('assets/abc2.json');
-    final Map<String, dynamic> data = json.decode(response);
-    _fileData = DashboardNewModel.fromMap(data);
+  /// Updates login state and notifies listeners
+  void _updateLoginState(
+    LoginState newState, {
+    String? errorMessage,
+    bool clearError = false,
+  }) {
+    _loginState = newState;
+
+    if (clearError) {
+      _loginErrorMessage = null;
+    } else if (errorMessage != null) {
+      _loginErrorMessage = errorMessage;
+    }
+
     notifyListeners();
   }
 
+  /// Updates FTP state and notifies listeners
+  void _updateFTPState(
+    FtpConnectionState newState, {
+    String? errorMessage,
+    bool clearError = false,
+  }) {
+    _ftpConnectionState = newState;
 
-  /// disposing the login provider
-  Future<void> dispose()async{
-    
+    if (clearError) {
+      _ftpErrorMessage = null;
+    } else if (errorMessage != null) {
+      _ftpErrorMessage = errorMessage;
+    }
+
+    notifyListeners();
+  }
+
+  /// Handles FTP connection failures
+  void _handleFTPConnectionFailure(String errorMessage) {
+    _isFTPConnected = false;
+    _updateFTPState(FtpConnectionState.failed, errorMessage: errorMessage);
+  }
+
+  /// Handles general connection errors
+  void _handleConnectionError(String errorMessage) {
+    _updateFTPState(FtpConnectionState.failed, errorMessage: errorMessage);
+  }
+
+  /// Clears error messages
+  void _clearErrorMessages() {
+    _ftpErrorMessage = null;
+    _loginErrorMessage = null;
+  }
+
+  /// Waits before retrying connection
+  Future<void> _waitBeforeRetry() async {
+    dev.log("Retrying connection in ${_retryDelay.inSeconds} seconds...");
+    await Future.delayed(_retryDelay);
+  }
+
+  /// Cleans up FTP connection resources
+  void _cleanupFTPConnection() {
+    _ftpSubscription?.cancel();
+    _ftpSubscription = null;
+    _isFTPConnected = false;
+
+    _ftpConnect?.disconnect().catchError((e) {
+      dev.log("Error disconnecting FTP", error: e);
+    });
+    _ftpConnect = null;
+  }
+
+  /// Cleans up all resources
+  void _cleanup() {
+    _cleanupFTPConnection();
+    _reconnectionTimer?.cancel();
+    _reconnectionTimer = null;
+  }
+
+  // ---- Public Methods ----
+
+  /// Manually disconnects FTP and resets connection state
+  Future<void> disconnect() async {
+    _cleanup();
+    _updateFTPState(FtpConnectionState.none, clearError: true);
+    _updateTetheringState(
+      isUsbTethering: false,
+      isMobileTetheringIpFound: false,
+      isDeviceTethering: false,
+    );
+  }
+
+  /// Logs out user and cleans up
+  void logout() {
+    _updateLoginState(LoginState.noLogin, clearError: true);
+    _usernameController.clear();
+    _passwordController.clear();
+    disconnect();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    _cleanup();
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 }

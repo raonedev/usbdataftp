@@ -78,12 +78,28 @@ class DashboardNewModel {
   }
 
   factory DashboardNewModel.fromMap(Map<String, dynamic> map) {
+    final ipCamerasList = (map['ip_cameras'] as List?)
+        ?.map((e) => IpCamera.fromMap(e))
+        .toList();
+    
+    // Calculate active and inactive cameras
+    int activeCameraCount = 0;
+    int unactiveCameraCount = 0;
+    
+    if (ipCamerasList != null) {
+      for (var camera in ipCamerasList) {
+        if (camera.isActive == true) {
+          activeCameraCount++;
+        } else {
+          unactiveCameraCount++;
+        }
+      }
+    }
+
     return DashboardNewModel(
-      activeCamera: map['active_camera'],
-      unactiveCamera: map['unactive_camera'],
-      ipCameras: (map['ip_cameras'] as List?)
-          ?.map((e) => IpCamera.fromMap(e))
-          .toList(),
+      activeCamera: activeCameraCount,
+      unactiveCamera: unactiveCameraCount,
+      ipCameras: ipCamerasList,
       cpu: map['cpu'] != null ? Cpu.fromMap(map['cpu']) : null,
       gpu: map['gpu'] != null ? Gpu.fromMap(map['gpu']) : null,
       ram: map['ram'] != null ? Ram.fromMap(map['ram']) : null,
@@ -146,29 +162,85 @@ class DashboardNewModel {
 
 class IpCamera {
   final String? name;
+  final String? host;
+  final int? port;
+  final String? ipAddress;
+  final String? macAddress;
+  final int? connectionStatusDb;
   final bool? isRecording;
   final bool? isActive;
+  final int? legacyId;
+  final bool? pingSuccess;
+  final bool? httpAccessible;
 
-  IpCamera({this.name, this.isRecording, this.isActive});
+  IpCamera({
+    this.name,
+    this.host,
+    this.port,
+    this.ipAddress,
+    this.macAddress,
+    this.connectionStatusDb,
+    this.isRecording,
+    this.isActive,
+    this.legacyId,
+    this.pingSuccess,
+    this.httpAccessible,
+  });
 
-  IpCamera copyWith({String? name, bool? isRecording, bool? isActive}) {
+  IpCamera copyWith({
+    String? name,
+    String? host,
+    int? port,
+    String? ipAddress,
+    String? macAddress,
+    int? connectionStatusDb,
+    bool? isRecording,
+    bool? isActive,
+    int? legacyId,
+    bool? pingSuccess,
+    bool? httpAccessible,
+  }) {
     return IpCamera(
       name: name ?? this.name,
+      host: host ?? this.host,
+      port: port ?? this.port,
+      ipAddress: ipAddress ?? this.ipAddress,
+      macAddress: macAddress ?? this.macAddress,
+      connectionStatusDb: connectionStatusDb ?? this.connectionStatusDb,
       isRecording: isRecording ?? this.isRecording,
       isActive: isActive ?? this.isActive,
+      legacyId: legacyId ?? this.legacyId,
+      pingSuccess: pingSuccess ?? this.pingSuccess,
+      httpAccessible: httpAccessible ?? this.httpAccessible,
     );
   }
 
   Map<String, dynamic> toMap() => {
     'name': name,
+    'host': host,
+    'port': port,
+    'ip_address': ipAddress,
+    'mac_address': macAddress,
+    'connection_status_db': connectionStatusDb,
     'isRecording': isRecording,
     'isActive': isActive,
+    'legacy_id': legacyId,
+    'ping_success': pingSuccess,
+    'http_accessible': httpAccessible,
   };
 
   factory IpCamera.fromMap(Map<String, dynamic> map) => IpCamera(
     name: map['name'],
+    host: map['host'],
+    port: map['port'],
+    ipAddress: map['ip_address'],
+    macAddress: map['mac_address'],
+    connectionStatusDb: map['connection_status_db'],
     isRecording: map['isRecording'],
     isActive: map['isActive'],
+    legacyId: map['legacy_id'],
+    pingSuccess: map['ping_success'],
+    httpAccessible: map['http_accessible'],
   );
 
   String toJson() => json.encode(toMap());
@@ -184,11 +256,31 @@ class IpCamera {
       identical(this, other) ||
       other is IpCamera &&
           name == other.name &&
+          host == other.host &&
+          port == other.port &&
+          ipAddress == other.ipAddress &&
+          macAddress == other.macAddress &&
+          connectionStatusDb == other.connectionStatusDb &&
           isRecording == other.isRecording &&
-          isActive == other.isActive;
+          isActive == other.isActive &&
+          legacyId == other.legacyId &&
+          pingSuccess == other.pingSuccess &&
+          httpAccessible == other.httpAccessible;
 
   @override
-  int get hashCode => Object.hash(name, isRecording, isActive);
+  int get hashCode => Object.hashAll([
+    name,
+    host,
+    port,
+    ipAddress,
+    macAddress,
+    connectionStatusDb,
+    isRecording,
+    isActive,
+    legacyId,
+    pingSuccess,
+    httpAccessible,
+  ]);
 }
 
 class Cpu {
