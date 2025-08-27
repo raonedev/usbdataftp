@@ -78,6 +78,7 @@ class MainActivity : FlutterActivity() {
             val name = iface.name
             if (name.contains("rndis") || name.contains("usb")) {  // <- RNDIS or USB tethering
                 val addresses = iface.inetAddresses
+                Log.d("DEBUG", "Interface: ${iface.name}, Address: ${addresses} ")
                 while (addresses.hasMoreElements()) {
                     val addr = addresses.nextElement()
                     if (!addr.isLoopbackAddress && addr.hostAddress.indexOf(':') < 0) {

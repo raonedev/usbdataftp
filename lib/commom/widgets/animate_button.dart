@@ -1,9 +1,9 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 
 class AnimatedTurnOnButton extends StatefulWidget {
   final VoidCallback onPressed;
-  const AnimatedTurnOnButton({super.key, required this.onPressed});
+  final String text;
+  const AnimatedTurnOnButton({super.key, required this.onPressed,this.text='Turn on'});
 
   @override
   State<AnimatedTurnOnButton> createState() => _AnimatedTurnOnButtonState();
@@ -20,10 +20,10 @@ class _AnimatedTurnOnButtonState extends State<AnimatedTurnOnButton>
 
     _scaleController = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: 1000),
+      duration: Duration(milliseconds: 2000),
     )..repeat(reverse: true);
 
-    _scaleAnim = Tween<double>(begin: 1.0, end: 1.1).animate(
+    _scaleAnim = Tween<double>(begin: 1.0, end: 1.01).animate(
       CurvedAnimation(parent: _scaleController, curve: Curves.easeInOut),
     );
 
@@ -50,8 +50,9 @@ class _AnimatedTurnOnButtonState extends State<AnimatedTurnOnButton>
                   Colors.purple,
                 ])
               ),
+              alignment: Alignment.center,
               child: Text(
-                "Turn on",
+                widget.text,
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,

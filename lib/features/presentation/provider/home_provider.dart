@@ -21,7 +21,7 @@ enum FtpConnectionState { loading, success, failed, none }
 /// 2. IP detection of mobile and PC.
 /// 3. FTP connection and file stream.
 /// 4. Login validation and UI state updates.
-class LoginProvider extends ChangeNotifier {
+class StartUpAppProvider extends ChangeNotifier {
   /// Describes the overall flow:
   /// USB detected -> USB tethering enabled -> Device IP found -> FTP connection -> Data retrieval.
 

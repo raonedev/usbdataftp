@@ -85,7 +85,7 @@ class ThemeConfig {
         fontWeight: FontWeight.w400,
       ), // Callout
       bodySmall: TextStyle(
-        fontSize: 15,
+        fontSize: 12,
         fontWeight: FontWeight.w400,
       ), // Subhead
       labelLarge: TextStyle(

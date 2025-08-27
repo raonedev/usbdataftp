@@ -1,0 +1,63 @@
+{
+  "ram": {
+    "usage_percent": 9.21,
+    "total_gb": 5.73,
+    "used_gb": 0.53,
+    "free_gb": 5.2
+  },
+  "storage": {
+    "usage": 4,
+    "total_gb": 1027
+  },
+  "hard_disk": [
+    {
+      "name": "sda",
+      "status": "UnHealthy",
+      "total_gb": 0,
+      "used_gb": 0,
+      "mountpoint": null
+    },
+    {
+      "name": "sdb",
+      "status": "UnHealthy",
+      "total_gb": 0,
+      "used_gb": 0,
+      "mountpoint": null
+    },
+    {
+      "name": "sdc",
+      "status": "Healthy",
+      "total_gb": 2,
+      "used_gb": 0,
+      "mountpoint": null
+    },
+    {
+      "name": "sdd",
+      "status": "Healthy",
+      "total_gb": 1024,
+      "used_gb": 4,
+      "mountpoint": "/mnt/wslg/distro"
+    }
+  ],
+  "network": {
+    "interface": "eth0",
+    "upload_speed_kib": 0.1,
+    "download_speed_kib": 0.1,
+    "upload_speed_bytes": 98,
+    "download_speed_bytes": 98
+  },
+  "cpu": {
+    "usage": 5,
+    "temperature_celsius": null
+  },
+  "location": {
+    "_id": "68a994c0c22d99affe0bef23",
+    "Time": "15:43:55",
+    "Latitude": 29.389367999999997,
+    "Longitude": 76.96851508333333,
+    "FixQuality": "1",
+    "NoOfSatellite": "07",
+    "Altitude": "260.9",
+    "Course": ""
+  }
+}

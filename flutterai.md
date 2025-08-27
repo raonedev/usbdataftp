@@ -828,3 +828,7 @@ When requested for Firebase add the following the server configurations to .idx/
         }
     }
 }
+
+https://video.wixstatic.com/video/2ca37b_430c9ce89fdd4e36a79f4bec2c1311de/480p/mp4/file.mp4
+
+https://video.wixstatic.com/video/2ca37b_430c9ce89fdd4e36a79f4bec2c1311de/480p/mp4/file.mp4

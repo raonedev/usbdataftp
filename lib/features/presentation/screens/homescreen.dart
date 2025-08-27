@@ -6,12 +6,12 @@ import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
 import '../../../commom/widgets/gradient_progressbar.dart';
-import '../provider/login_provider.dart';
+import '../provider/home_provider.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key, required this.loginProvider});
 
-  final LoginProvider loginProvider;
+  final StartUpAppProvider loginProvider;
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +21,7 @@ class HomeScreen extends StatelessWidget {
         statusBarIconBrightness: Brightness.dark,
       ),
     );
-    return context.watch<LoginProvider>().filedata == null
+    return context.watch<StartUpAppProvider>().filedata == null
         ? Center(child: CupertinoActivityIndicator(color: Colors.black))
         : SafeArea(
             child: Padding(

@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:usbdataftptest/features/presentation/screens/homescreen.dart';
-import 'package:usbdataftptest/features/presentation/screens/recordingscreen.dart';
-import '../provider/login_provider.dart';
+import 'homescreen.dart';
+import 'recordingscreen.dart';
+import '../provider/home_provider.dart';
 
 
 class DashBoardScreen extends StatefulWidget {
@@ -29,11 +29,11 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final loginProvider = context.watch<LoginProvider>();
+    final loginProvider = context.watch<StartUpAppProvider>();
 
     return Scaffold(
       backgroundColor: Color(0xFFF5F5F5),
-      body: Consumer<LoginProvider>(
+      body: Consumer<StartUpAppProvider>(
         builder: (context, loginProvider, child) {
           // // Check if mobile tethering IP is NOT found AND we haven't navigated yet.
           // if (!loginProvider.isMobileTetheringIpFound && !_hasNavigatedToLogin) {
@@ -56,13 +56,14 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
           // }
           return child!;
         },
-        child: IndexedStack(
-          index: _selectedIndex,
-          children: [
-            HomeScreen(loginProvider: loginProvider),
-            Recordingscreen(),
-          ],
-        ),
+        child: _selectedIndex==0?HomeScreen(loginProvider: loginProvider):Recordingscreen(),
+        // child: IndexedStack(
+        //   index: _selectedIndex,
+        //   children: [
+        //     HomeScreen(loginProvider: loginProvider),
+        //     Recordingscreen(),
+        //   ],
+        // ),
       ),
 
       bottomNavigationBar: BottomNavigationBar(

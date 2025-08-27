@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
-import '../provider/login_provider.dart';
+import '../provider/home_provider.dart';
 import '../../../core/helper.dart';
 import '../../../commom/widgets/my_elevatedbutton.dart';
 import '../../../commom/widgets/animate_button.dart';
-import 'vmsui.dart';
+import 'dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -16,18 +16,18 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool isDialogShown = false;
-  late LoginProvider loginProvider;
+  late StartUpAppProvider startUpAppProvider;
 
   @override
   void initState() {
     super.initState();
-    loginProvider = context.read<LoginProvider>();
-    loginProvider.addListener(_checkAndShowDialog);
+    startUpAppProvider = context.read<StartUpAppProvider>();
+    // startUpAppProvider.addListener(_checkAndShowDialog);
 
-    loginProvider.initialized();
+    // startUpAppProvider.initialized();
 
-    // Perform an initial check AFTER registering the listener and starting initialized()
-    // Use addPostFrameCallback to ensure the first frame is built and context is ready for showDialog
+    // // Perform an initial check AFTER registering the listener and starting initialized()
+    // // Use addPostFrameCallback to ensure the first frame is built and context is ready for showDialog
     // WidgetsBinding.instance.addPostFrameCallback((_) {
     //   _checkAndShowDialog();
     // });
@@ -36,12 +36,12 @@ class _LoginScreenState extends State<LoginScreen> {
   ///df --output=used /dev/${diskName}* | tail -n 1
   @override
   void dispose() {
-    loginProvider.removeListener(_checkAndShowDialog);
+    startUpAppProvider.removeListener(_checkAndShowDialog);
     super.dispose();
   }
 
   void _checkAndShowDialog() {
-    if (!loginProvider.isFTPConnected && !isDialogShown) {
+    if (!startUpAppProvider.isFTPConnected && !isDialogShown) {
       isDialogShown = true;
 
       showDialog(
@@ -50,7 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
         builder: (context) {
           return PopScope(
             canPop: false,
-            child: Consumer<LoginProvider>(
+            child: Consumer<StartUpAppProvider>(
               builder: (context, loginProvider, _) {
                 return Dialog(
                   backgroundColor: Colors.transparent,
@@ -176,7 +176,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     // Auto-close dialog when FTP connects
-    if (loginProvider.isFTPConnected && isDialogShown) {
+    if (startUpAppProvider.isFTPConnected && isDialogShown) {
       Navigator.of(context, rootNavigator: true).pop();
       isDialogShown = false;
     }
@@ -184,13 +184,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final loginProviderBuild = Provider.of<LoginProvider>(context);
+    final loginProviderBuild = Provider.of<StartUpAppProvider>(context);
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: PortraitView(loginProvider: loginProviderBuild),
+          child: PortraitView(startAppProvider: loginProviderBuild),
           // child: LayoutBuilder(
           //   builder: (context, constraints) {
           //     bool isWide = constraints.maxWidth > 600;
@@ -205,11 +205,17 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-class PortraitView extends StatelessWidget {
-  const PortraitView({super.key, required this.loginProvider});
+class PortraitView extends StatefulWidget {
+  const PortraitView({super.key, required this.startAppProvider});
 
-  final LoginProvider loginProvider;
+  final StartUpAppProvider startAppProvider;
 
+  @override
+  State<PortraitView> createState() => _PortraitViewState();
+}
+
+class _PortraitViewState extends State<PortraitView> {
+  bool isHidePassword = true;
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -232,7 +238,7 @@ class PortraitView extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 TextFormField(
-                  controller: loginProvider.usernameController,
+                  controller: widget.startAppProvider.usernameController,
                   textInputAction: TextInputAction.next,
                   decoration: InputDecoration(
                     hintText: "Enter Username",
@@ -241,25 +247,36 @@ class PortraitView extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 TextFormField(
-                  controller: loginProvider.passwordController,
-                  obscureText: true,
+                  controller: widget.startAppProvider.passwordController,
+                  obscureText: isHidePassword,
                   decoration: InputDecoration(
                     hintText: "Enter Password",
                     hintStyle: Theme.of(context).textTheme.labelMedium,
+                    suffixIcon: IconButton(
+                      icon: Icon(isHidePassword?Icons.visibility_off:Icons.visibility),
+                      onPressed: () {
+                        setState(
+                          (){
+                            isHidePassword=!isHidePassword;
+                          }
+                        );
+                      },
+                    ),
                   ),
                 ),
                 const SizedBox(height: 8),
                 MyElevatedButton(
                   width: double.infinity,
                   height: 45,
-                  onPressed: loginProvider.loginState == LoginState.loading
+                  onPressed:
+                      widget.startAppProvider.loginState == LoginState.loading
                       ? null
                       : () async {
-                          await loginProvider.loginSubmit();
-                          if (loginProvider.loginState ==
+                          await widget.startAppProvider.loginSubmit();
+                          if (widget.startAppProvider.loginState ==
                               LoginState.loginSuccess) {
                             if (!context.mounted) return;
-                            loginProvider.checkingTempData();
+                            widget.startAppProvider.checkingTempData();
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
@@ -315,7 +332,7 @@ class PortraitView extends StatelessWidget {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  child: loginProvider.loginState == LoginState.loading
+                  child: widget.startAppProvider.loginState == LoginState.loading
                       ? SizedBox(
                           width: 20,
                           height: 20,
@@ -334,10 +351,10 @@ class PortraitView extends StatelessWidget {
                         ),
                 ),
                 const SizedBox(height: 8),
-                if (loginProvider.loginState == LoginState.loginFailed &&
-                    loginProvider.loginErrorMessage != null)
+                if (widget.startAppProvider.loginState == LoginState.loginFailed &&
+                    widget.startAppProvider.loginErrorMessage != null)
                   Text(
-                    loginProvider.loginErrorMessage!,
+                    widget.startAppProvider.loginErrorMessage!,
                     style: Theme.of(
                       context,
                     ).textTheme.bodySmall?.copyWith(color: Colors.red),

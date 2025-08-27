@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:usbdataftptest/features/presentation/provider/auth/auth_provider.dart';
+import 'package:usbdataftptest/features/testing/system_info_provider.dart';
 import 'core/apptheme.dart';
-import 'features/presentation/provider/login_provider.dart';
+import 'features/presentation/provider/home_provider.dart';
 import 'features/presentation/screens/login.dart';
 
 void main() {
@@ -15,7 +17,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider<LoginProvider>(create: (_) => LoginProvider()),
+        ChangeNotifierProvider<StartUpAppProvider>(create: (_) => StartUpAppProvider()),
+        ChangeNotifierProvider<SystemInfoProvider>(create: (_) => SystemInfoProvider()),
+        ChangeNotifierProvider<AuthProvider>(create: (_) => AuthProvider()),
+
       ],
       child: MaterialApp(
         title: 'Flutter Demo',
