@@ -5,6 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
+import '../provider/auth/get_sys_info_file_management.dart';
 import '../../../commom/widgets/gradient_progressbar.dart';
 import '../provider/home_provider.dart';
 
@@ -21,9 +22,15 @@ class HomeScreen extends StatelessWidget {
         statusBarIconBrightness: Brightness.dark,
       ),
     );
-    return context.watch<StartUpAppProvider>().filedata == null
-        ? Center(child: CupertinoActivityIndicator(color: Colors.black))
-        : SafeArea(
+
+    final getSysInfoFileManagementProvider =context.watch<GetSysInfoFileManagement>(); 
+    final ipCameras = getSysInfoFileManagementProvider.ipCameras;
+    final systemInfoModel = getSysInfoFileManagementProvider.systemInfoModel;
+
+    // return context.watch<StartUpAppProvider>().filedata == null
+    //     ? Center(child: CupertinoActivityIndicator(color: Colors.black))
+    //     : 
+       return SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: SingleChildScrollView(
@@ -54,9 +61,8 @@ class HomeScreen extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  loginProvider.filedata!.activeCamera
-                                          ?.toString() ??
-                                      '0',
+                                  // loginProvider.filedata!.activeCamera?.toString() ??'0',
+                                  "${ipCameras?.cameras?.where((c) => c.isActive == true && c.deviceType=="Camera").length ?? 0}",
                                   style: TextStyle(
                                     color: Colors.black,
                                     fontSize: 32,
@@ -90,7 +96,8 @@ class HomeScreen extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  loginProvider.filedata!.unactiveCamera?.toString() ?? '0',
+                                  // loginProvider.filedata!.unactiveCamera?.toString() ?? '0',
+                                  "${ipCameras?.cameras?.where((c) => c.isActive == false && c.deviceType=="Camera").length ?? 0}",
                                   style: TextStyle(
                                     color: Colors.black,
                                     fontSize: 32,
@@ -121,18 +128,14 @@ class HomeScreen extends StatelessWidget {
                                 ),
                                 Spacer(),
                                 SubTitleWeidget(
-                                  subtitle: "Total: ${loginProvider.filedata!.storage?.totalGb?.toStringAsFixed(0) ?? '0'}GB",
-                                  trailingText: "${((loginProvider.filedata!.storage?.usage ?? 0) / (loginProvider.filedata!.storage?.totalGb ?? 1) * 100).toStringAsFixed(0)}%",
+                                  // subtitle: "Total: ${loginProvider.filedata!.storage?.totalGb?.toStringAsFixed(0) ?? '0'}GB",
+                                  // trailingText: "${((loginProvider.filedata!.storage?.usage ?? 0) / (loginProvider.filedata!.storage?.totalGb ?? 1) * 100).toStringAsFixed(0)}%",
+                                  subtitle: "Total: ${systemInfoModel[systemInfoModel.length-1].storage?.totalGb??0}",
+                                  trailingText: "${((systemInfoModel[systemInfoModel.length-1].storage?.usedGb ?? 0) / (systemInfoModel[systemInfoModel.length-1].storage?.totalGb ?? 1) * 100).toStringAsFixed(0)}%",
                                 ),
                                 const SizedBox(height: 4),
                                 GradientProgressBar(
-                                  value:
-                                      (loginProvider.filedata!.storage?.usage ??0) /
-                                      (loginProvider
-                                              .filedata!
-                                              .storage
-                                              ?.totalGb ??
-                                          1),
+                                  value:(systemInfoModel[systemInfoModel.length-1].storage?.usedGb ??0) / (systemInfoModel[systemInfoModel.length-1].storage?.totalGb ??1),
                                 ),
                               ],
                             ),
@@ -157,17 +160,15 @@ class HomeScreen extends StatelessWidget {
                                 ),
                                 Spacer(),
                                 SubTitleWeidget(
-                                  subtitle:
-                                      "Total: ${loginProvider.filedata!.ram?.totalGb?.toStringAsFixed(0) ?? '0'}GB",
-                                  trailingText:
-                                      "${loginProvider.filedata!.ram?.usage}%",
+                                  // subtitle:"Total: ${loginProvider.filedata!.ram?.totalGb?.toStringAsFixed(0) ?? '0'}GB",
+                                  // trailingText:"${loginProvider.filedata!.ram?.usage}%",
+                                  subtitle:"Total: ${systemInfoModel[systemInfoModel.length-1].ram?.totalGb?.toStringAsFixed(0) ?? '0'}GB",
+                                  trailingText:"${systemInfoModel[systemInfoModel.length-1].ram?.usagePercentage}%",
+
                                 ),
                                 const SizedBox(height: 4),
                                 GradientProgressBar(
-                                  value:
-                                      (loginProvider.filedata!.ram?.usage ??
-                                          0) /
-                                      100,
+                                  value: (systemInfoModel[systemInfoModel.length-1].ram?.usagePercentage ??0) /100,
                                 ),
                               ],
                             ),
@@ -194,21 +195,16 @@ class HomeScreen extends StatelessWidget {
                                 Spacer(),
                                 SubTitleWeidget(
                                   subtitle: "CPU Usage",
-                                  trailingText:
-                                      "${loginProvider.filedata!.cpu?.usage?.toStringAsFixed(0) ?? '0'}%",
+                                  trailingText:"${systemInfoModel[systemInfoModel.length-1].cpu?.usagePercent?.toStringAsFixed(0) ?? '0'}%",
                                 ),
                                 const SizedBox(height: 4),
                                 GradientProgressBar(
-                                  value:
-                                      (loginProvider.filedata!.cpu?.usage ??
-                                          0) /
-                                      100,
+                                  value:(systemInfoModel[systemInfoModel.length-1].cpu?.usagePercent ??0) /100,
                                 ),
                                 const SizedBox(height: 8),
                                 SubTitleWeidget(
                                   subtitle: "Temperature",
-                                  trailingText:
-                                      "${loginProvider.filedata!.cpu?.temperatureCelsius?.toStringAsFixed(1) ?? '0'}°C",
+                                  trailingText: "${systemInfoModel[systemInfoModel.length-1].cpu?.temperatureCelsius?.toStringAsFixed(1) ?? '0'}°C",
                                 ),
                               ],
                             ),
@@ -236,12 +232,12 @@ class HomeScreen extends StatelessWidget {
                                 SubTitleWeidget(
                                   subtitle: "GPU Usage",
                                   trailingText:
-                                      "${loginProvider.filedata!.gpu?.usage?.toStringAsFixed(0) ?? '0'}%",
+                                      "${systemInfoModel[systemInfoModel.length-1].gpu?.usagePercent?.toStringAsFixed(0) ?? '0'}%",
                                 ),
                                 const SizedBox(height: 4),
                                 GradientProgressBar(
                                   value:
-                                      (loginProvider.filedata!.gpu?.usage ??
+                                      (systemInfoModel[systemInfoModel.length-1].gpu?.usagePercent ??
                                           0) /
                                       100,
                                 ),
@@ -249,7 +245,7 @@ class HomeScreen extends StatelessWidget {
                                 SubTitleWeidget(
                                   subtitle: "Temperature",
                                   trailingText:
-                                      "${loginProvider.filedata!.gpu?.temperatureCelsius?.toStringAsFixed(1) ?? '0'}°C",
+                                      "${systemInfoModel[systemInfoModel.length-1].gpu?.temperatureCelsius?.toStringAsFixed(1) ?? '0'}°C",
                                 ),
                               ],
                             ),
@@ -283,9 +279,10 @@ class HomeScreen extends StatelessWidget {
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                      ...?loginProvider.filedata!.ipCameras
+                                      // ...?loginProvider.filedata!.ipCameras
+                                      ...?ipCameras?.cameras
                                           ?.where(
-                                            (camera) => camera.isActive == true,
+                                            (camera) => camera.isActive == true && camera.deviceType=="Camera",
                                           )
                                           .map(
                                             (camera) => Column(
@@ -319,9 +316,10 @@ class HomeScreen extends StatelessWidget {
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                      ...?loginProvider.filedata!.ipCameras
+                                      // ...?loginProvider.filedata!.ipCameras
+                                      ...?ipCameras?.cameras
                                           ?.where(
-                                            (camera) => camera.isActive != true,
+                                            (camera) => camera.isActive != true && camera.deviceType=="Camera",
                                           )
                                           .map(
                                             (camera) => Column(
@@ -368,8 +366,7 @@ class HomeScreen extends StatelessWidget {
                             tooltipBehavior = TooltipBehavior(
                               duration: 800,
                               enable: true,
-                              activationMode: ActivationMode
-                                  .none, // We will control it manually
+                              activationMode: ActivationMode.none, // We will control it manually
                               builder:
                                   (
                                     dynamic data,
@@ -398,20 +395,15 @@ class HomeScreen extends StatelessWidget {
                                   },
                             );
 
-                            final hardDisks =
-                                loginProvider.filedata?.hardDisk ?? [];
-                            final chartData = hardDisks
-                                .map(
+                            // final hardDisks =loginProvider.filedata?.hardDisk ?? [];
+                            final hardDisks =systemInfoModel[systemInfoModel.length-1].hardDisk?.disks ??[];
+                            final chartData = hardDisks.map(
                                   (disk) => ChartData(
                                     disk.name ?? 'Unknown',
-                                    ((disk.usedGb ?? 0) /
-                                            (disk.totalGb ?? 1) *
-                                            100)
-                                        .clamp(0, 100),
+                                    ((disk.usedGb ?? 0) / (disk.totalGb ?? 1) * 100).clamp(0, 100),
                                     disk.status ?? 'Unknown',
                                   ),
-                                )
-                                .toList();
+                                ).toList();
 
                             return Card(
                               color: Colors.white,
@@ -433,10 +425,8 @@ class HomeScreen extends StatelessWidget {
                                   const SizedBox(height: 4),
                                   Expanded(
                                     child: Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
                                         // Chart
                                         SizedBox(
@@ -445,38 +435,20 @@ class HomeScreen extends StatelessWidget {
                                           child: SfCircularChart(
                                             tooltipBehavior: tooltipBehavior,
                                             series: <CircularSeries>[
-                                              RadialBarSeries<
-                                                ChartData,
-                                                String
-                                              >(
+                                              RadialBarSeries<ChartData,String>(
                                                 dataSource: chartData,
-                                                xValueMapper:
-                                                    (ChartData data, _) =>
-                                                        data.x,
-                                                yValueMapper:
-                                                    (ChartData data, _) =>
-                                                        data.y,
-                                                cornerStyle:
-                                                    CornerStyle.bothCurve,
+                                                xValueMapper:(ChartData data, _) =>data.x,
+                                                yValueMapper:(ChartData data, _) =>data.y,
+                                                cornerStyle:CornerStyle.bothCurve,
                                                 gap: "5%",
                                                 radius: '100%',
                                                 innerRadius: '30%',
-                                                pointColorMapper:
-                                                    (ChartData data, _) =>
-                                                        data.status == 'Healthy'
-                                                        ? Colors.green
-                                                        : Colors.red,
-                                                dataLabelSettings:
-                                                    DataLabelSettings(
-                                                      isVisible: false,
-                                                    ),
+                                                pointColorMapper : (ChartData data, _) =>data.status == 'Healthy'? Colors.green: Colors.red,
+                                                dataLabelSettings : DataLabelSettings(isVisible: false,),
                                                 maximumValue: 100,
                                               ),
                                             ],
-                                            annotations:
-                                                const <
-                                                  CircularChartAnnotation
-                                                >[],
+                                            annotations:const <CircularChartAnnotation>[],
                                           ),
                                         ),
                                         // Annotations outside and to the right
@@ -613,10 +585,11 @@ class HomeScreen extends StatelessWidget {
                                 Expanded(
                                   child: ListView.builder(
                                     physics: const ClampingScrollPhysics(),
-                                    itemCount:
-                                        loginProvider.filedata!.ipCameras?.length ??0,
+                                    // itemCount: loginProvider.filedata!.ipCameras?.length ??0,
+                                    itemCount: ipCameras?.cameras?.length ??0,
                                     itemBuilder: (context, index) {
-                                      final camera = loginProvider.filedata!.ipCameras![index];
+                                      // final camera = loginProvider.filedata!.ipCameras![index];
+                                      final camera = ipCameras?.cameras![index];
                                       return Column(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
@@ -625,19 +598,19 @@ class HomeScreen extends StatelessWidget {
                                                 MainAxisAlignment.spaceBetween,
                                             children: [
                                               Text(
-                                                camera.name ?? 'Unknown',
+                                                camera?.name ?? 'Unknown',
                                                 style: Theme.of(
                                                   context,
                                                 ).textTheme.labelMedium,
                                               ),
                                               Icon(
-                                                camera.isRecording == true
+                                                camera?.isRecording == true
                                                     ? CupertinoIcons
                                                           .checkmark_circle_fill
                                                     : CupertinoIcons.clear_thick_circled,
                                                 size: 16,
                                                         color:
-                                                          camera.isRecording ==
+                                                          camera?.isRecording ==
                                                               true
                                                           ? Colors.green
                                                           : Colors.red,
@@ -675,14 +648,13 @@ class HomeScreen extends StatelessWidget {
                                 Spacer(),
                                 SubTitleWeidget(
                                   subtitle: "Upload Speed",
-                                  trailingText:
-                                      "${loginProvider.filedata!.network?.uploadSpeedMbps?.toStringAsFixed(1) ?? '0'} Mbps",
+                                  // trailingText: "${loginProvider.filedata!.network?.uploadSpeedMbps?.toStringAsFixed(1) ?? '0'} Mbps",
+                                  trailingText: "${systemInfoModel[systemInfoModel.length-1].network?.uploadSpeedKIB?.toStringAsFixed(1) ?? '0'} KIBps",
                                 ),
                                 const SizedBox(height: 8),
                                 SubTitleWeidget(
                                   subtitle: "Download Speed",
-                                  trailingText:
-                                      "${loginProvider.filedata!.network?.downloadSpeedMbps?.toStringAsFixed(1) ?? '0'} Mbps",
+                                  trailingText: "${systemInfoModel[systemInfoModel.length-1].network?.downloadSpeedKib?.toStringAsFixed(1) ?? '0'} KIBps",
                                 ),
                               ],
                             ),
@@ -707,17 +679,17 @@ class HomeScreen extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  "Total: ${loginProvider.filedata!.audioDevices?.total?.toString() ?? '0'}",
+                                  // "Total: ${loginProvider.filedata!.audioDevices?.total?.toString() ?? '0'}",
+                                  "Total: ${ipCameras?.cameras?.where((c) => c.deviceType=="Audio").length ?? 0}",
                                 ),
                                 const SizedBox(height: 4),
                                 Expanded(
                                   child: ListView(
-                                    children:
-                                        loginProvider
-                                            .filedata!
-                                            .audioDevices
-                                            ?.devices
-                                            ?.map(
+                                    // children: loginProvider.filedata!.audioDevices?.devices
+                                    children: ipCameras?.cameras
+                                          ?.where(
+                                            (camera) => camera.deviceType=="Audio",
+                                          ).map(
                                               (device) => Column(
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
@@ -727,7 +699,7 @@ class HomeScreen extends StatelessWidget {
                                                             .spaceBetween,
                                                     children: [
                                                       Text(
-                                                        device,
+                                                        device.name??"Unknown",
                                                         style: TextStyle(
                                                           color: Colors.black,
                                                           fontSize: 12,
@@ -735,7 +707,7 @@ class HomeScreen extends StatelessWidget {
                                                       ),
                                                       Icon(
                                                         Icons.mic,
-                                                        color: Colors.blue,
+                                                        color: device.isActive==true? Colors.blue:Colors.red,
                                                         size: 16,
                                                       ),
                                                     ],
@@ -772,16 +744,15 @@ class HomeScreen extends StatelessWidget {
                                 ),
                                 Spacer(),
                                 SubTitleWeidget(
-                                  subtitle: "City",
-                                  trailingText:
-                                      loginProvider.filedata!.location?.city ??
-                                      'Unknown',
+                                  subtitle: "Logitude",
+                                  // trailingText: loginProvider.filedata!.location?.city ?? 'Unknown',
+                                  trailingText: systemInfoModel[systemInfoModel.length-1].location?.longitude?.toString() ?? '0',
                                 ),
                                 const SizedBox(height: 8),
                                 SubTitleWeidget(
-                                  subtitle: "Coordinates",
-                                  trailingText:
-                                      "${loginProvider.filedata!.location?.latitude?.toStringAsFixed(2) ?? '0'}, ${loginProvider.filedata!.location?.longitude?.toStringAsFixed(2) ?? '0'}",
+                                  subtitle: "Latitude",
+                                  // trailingText:"${loginProvider.filedata!.location?.latitude?.toStringAsFixed(2) ?? '0'}, ${loginProvider.filedata!.location?.longitude?.toStringAsFixed(2) ?? '0'}",
+                                  trailingText:systemInfoModel[systemInfoModel.length-1].location?.latitude?.toString() ?? '0',
                                 ),
                               ],
                             ),

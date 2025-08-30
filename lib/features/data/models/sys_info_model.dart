@@ -7,6 +7,7 @@ class SystemInfoModel {
   final Network? network;
   final Cpu? cpu;
   final Location? location;
+  final Gpu? gpu;
 
   SystemInfoModel({
     this.ram,
@@ -15,6 +16,7 @@ class SystemInfoModel {
     this.network,
     this.cpu,
     this.location,
+    this.gpu,
   });
 
   SystemInfoModel copyWith({
@@ -24,6 +26,7 @@ class SystemInfoModel {
     Network? network,
     Cpu? cpu,
     Location? location,
+    Gpu? gpu
   }) {
     return SystemInfoModel(
       ram: ram ?? this.ram,
@@ -32,6 +35,7 @@ class SystemInfoModel {
       network: network ?? this.network,
       cpu: cpu ?? this.cpu,
       location: location ?? this.location,
+      gpu: gpu ?? this.gpu
     );
   }
 
@@ -50,6 +54,7 @@ class SystemInfoModel {
       network: map['network'] != null ? Network.fromMap(map['network'] as Map<String,dynamic>) : null,
       cpu: map['cpu'] != null ? Cpu.fromMap(map['cpu'] as Map<String,dynamic>) : null,
       location: map['location'] != null ? Location.fromMap(map['location'] as Map<String,dynamic>) : null,
+      gpu: map['gpu'] != null ? Gpu.fromMap(map['gpu'] as Map<String,dynamic>) : null,
     );
   }
 
@@ -57,7 +62,7 @@ class SystemInfoModel {
 
   @override
   String toString() {
-    return 'SystemInfoModel(\nram: $ram, \nstorage: $storage, \nhardDisk: $hardDisk, \nnetwork: $network, \ncpu: $cpu, \nlocation: $location)';
+    return 'SystemInfoModel(\nram: $ram, \nstorage: $storage, \nhardDisk: $hardDisk, \nnetwork: $network, \ncpu: $cpu, \ngpu: $gpu, \nlocation: $location)';
   }
 }
 
@@ -335,4 +340,29 @@ class Location {
       altitude.hashCode ^
       course.hashCode;
   }
+}
+
+
+///--------GPU-----------
+class Gpu {
+  final int? usagePercent;
+  final double? temperatureCelsius;
+
+  Gpu({this.usagePercent, this.temperatureCelsius});
+
+  factory Gpu.fromMap(Map<String, dynamic> map) {
+    return Gpu(
+      usagePercent: map['usage'] != null ? map['usage'] as int : null,
+      temperatureCelsius: map['temperature_celsius'] != null
+          ? map['temperature_celsius'] as double
+          : null,
+    );
+  }
+
+  factory Gpu.fromJson(String source) =>
+      Gpu.fromMap(json.decode(source) as Map<String, dynamic>);
+
+  @override
+  String toString() =>
+      'Gpu(usagePercent:$usagePercent, temperaturePercentage:$temperatureCelsius)';
 }

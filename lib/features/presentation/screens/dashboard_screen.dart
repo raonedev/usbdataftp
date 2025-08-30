@@ -1,10 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:usbdataftptest/features/presentation/provider/auth/auth_provider.dart';
+import 'package:usbdataftptest/features/presentation/provider/auth/get_sys_info_file_management.dart';
 import 'homescreen.dart';
 import 'recordingscreen.dart';
 import '../provider/home_provider.dart';
-
 
 class DashBoardScreen extends StatefulWidget {
   const DashBoardScreen({super.key});
@@ -14,16 +17,38 @@ class DashBoardScreen extends StatefulWidget {
 }
 
 class _DashBoardScreenState extends State<DashBoardScreen> {
-  bool _hasNavigatedToLogin = false;
   int _selectedIndex = 0;
+  late String baseUrl;
+  late String? token;
+  Timer? _fetchTimer;
 
   @override
   void initState() {
     super.initState();
+    initialized(context);
+  }
+
+  Future<void> initialized(BuildContext context) async {
+    final authProvider = context.read<AuthProvider>();
+    final getSysInfoFileManagement = context.read<GetSysInfoFileManagement>();
+    baseUrl = authProvider.baseUrl;
+    token = await authProvider.getAuthToken();
+    getSysInfoFileManagement.connectToSysInfoStream(
+      baseUrl: baseUrl,
+      token: token!,
+    );
+     _fetchTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      // Call your method here
+      getSysInfoFileManagement.fetchIpCameras(
+        baseUrl: baseUrl,
+        token: token!
+      );
+    });
   }
 
   @override
   void dispose() {
+    _fetchTimer?.cancel();
     super.dispose();
   }
 
@@ -56,7 +81,9 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
           // }
           return child!;
         },
-        child: _selectedIndex==0?HomeScreen(loginProvider: loginProvider):Recordingscreen(),
+        child: _selectedIndex == 0
+            ? HomeScreen(loginProvider: loginProvider)
+            : Recordingscreen(),
         // child: IndexedStack(
         //   index: _selectedIndex,
         //   children: [
@@ -75,7 +102,10 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
           });
         },
         items: [
-          BottomNavigationBarItem(icon: Icon(CupertinoIcons.home), label: 'Home'),
+          BottomNavigationBarItem(
+            icon: Icon(CupertinoIcons.home),
+            label: 'Home',
+          ),
           BottomNavigationBarItem(
             icon: Icon(CupertinoIcons.folder),
             label: 'Recordings',
@@ -85,4 +115,3 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
     );
   }
 }
-

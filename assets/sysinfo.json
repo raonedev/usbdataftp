@@ -59,5 +59,9 @@
     "NoOfSatellite": "07",
     "Altitude": "260.9",
     "Course": ""
+  },
+  "gpu": {
+    "usage": 0,
+    "temperature_celsius": null
   }
 }

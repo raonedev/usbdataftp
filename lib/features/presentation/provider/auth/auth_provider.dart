@@ -34,7 +34,7 @@ class AuthResult {
   AuthResult({required this.success, this.error, this.user});
 }
 
-// Custom exceptions
+
 class AuthException implements Exception {
   final String message;
   final String? code;
@@ -252,7 +252,7 @@ class AuthProvider with ChangeNotifier {
         );
       }
 
-      if (password.length < 8 || password.length > 128) {
+      if (password.length < 5 || password.length > 128) {
         throw ValidationException(
           'Password must be between 8 and 128 characters',
         );
@@ -317,7 +317,6 @@ class AuthProvider with ChangeNotifier {
     } on AuthException {
       rethrow;
     } catch (e) {
-      // _logger.severe('Login error: $e');
       throw AuthException('Login failed: ${e.toString()}');
     } finally {
       _setLoading(false);
