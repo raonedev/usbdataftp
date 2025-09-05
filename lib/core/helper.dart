@@ -116,11 +116,12 @@ Future<String?> findPcIpByPingSubnet(String androidIp) async {
     // Calculate the end index for the current batch
     final endIndex = (i + batchSize - 1).clamp(1, 255);
     // Create a batch of IPs to ping
-    final batchIps = List.generate(
-      endIndex - i + 1,
-      (index) => '$subnet.${i + index}',
-      growable: false,
-    );
+    final batchIps = <String>[];
+    for (int j = i; j <= endIndex; j++) {
+      final ip = '$subnet.$j';
+      if (ip == androidIp) continue;
+      batchIps.add(ip);
+    }
 
     // Ping all IPs in the batch concurrently
     final results = await Future.wait(
@@ -138,3 +139,14 @@ Future<String?> findPcIpByPingSubnet(String androidIp) async {
 
   return null; // No reachable host found
 }
+
+
+ Future<bool> checkPing({required String baseUrl}) async {
+    try {
+      final String ip = Uri.parse(baseUrl).host;
+      return await pingSingleIp(ip) != null;
+    } on FormatException {
+      log('Error: Invalid URL format for baseUrl');
+      return false;
+    }
+  }

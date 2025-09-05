@@ -50,10 +50,23 @@ class AllRecordingsFiles {
     );
   }
 
-  String toJson() => json.encode(toMap());
-
   factory AllRecordingsFiles.fromJson(String source) =>
       AllRecordingsFiles.fromMap(json.decode(source) as Map<String, dynamic>);
+
+  // ----------------------------
+  // Isolate-enabled JSON parsing
+  // ----------------------------
+  static Future<AllRecordingsFiles> fromJsonIsolate(String source) async {
+    return compute(_parseJson, source);
+  }
+
+  static AllRecordingsFiles _parseJson(String source) {
+    return AllRecordingsFiles.fromMap(
+      json.decode(source) as Map<String, dynamic>,
+    );
+  }
+
+  String toJson() => json.encode(toMap());
 
   @override
   String toString() {
@@ -80,21 +93,22 @@ class AllRecordingsFiles {
 }
 
 class RecordingFileModel {
-  final String name;
-  final String path;
-  final String created;
-  final String modified;
-  final String sizeFormatted;
-  final int deviceId;
-  final int size;
+  final String? name;
+  final String? path;
+  final String? created;
+  final String? modified;
+  final String? sizeFormatted;
+  final int? deviceId;
+  final int? size;
+
   RecordingFileModel({
-    required this.name,
-    required this.path,
-    required this.created,
-    required this.modified,
-    required this.sizeFormatted,
-    required this.deviceId,
-    required this.size,
+    this.name,
+    this.path,
+    this.created,
+    this.modified,
+    this.sizeFormatted,
+    this.deviceId,
+    this.size,
   });
 
   RecordingFileModel copyWith({
@@ -131,13 +145,14 @@ class RecordingFileModel {
 
   factory RecordingFileModel.fromMap(Map<String, dynamic> map) {
     return RecordingFileModel(
-      name: map['name'] as String,
-      path: map['path'] as String,
-      created: map['created'] as String,
-      modified: map['modified'] as String,
-      sizeFormatted: map['sizeFormatted'] as String,
-      deviceId: map['deviceId'] as int,
-      size: map['size'] as int,
+      name: map['name'] as String?,
+      path: map['path'] as String?,
+      created: map['created'] as String?,
+      modified: map['modified'] as String?,
+      sizeFormatted: map['sizeFormatted'] as String?,
+      // Handle potential nulls before converting from num to int
+      deviceId: map['deviceId'] != null ? (map['deviceId'] as num).toInt() : null,
+      size: map['size'] != null ? (map['size'] as num).toInt() : null,
     );
   }
 

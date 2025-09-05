@@ -220,7 +220,7 @@ class _SystemInfoScreenState extends State<SystemInfoScreen> {
           drawVerticalLine: false,
           horizontalInterval: maxY / 4,
           getDrawingHorizontalLine: (value) => FlLine(
-            color: Colors.grey.withOpacity(0.3),
+            color: Colors.grey.withValues(alpha: 0.3),
             strokeWidth: 1,
           ),
         ),
@@ -256,7 +256,7 @@ class _SystemInfoScreenState extends State<SystemInfoScreen> {
             dotData: FlDotData(show: false),
             belowBarData: BarAreaData(
               show: true,
-              color: color.withOpacity(0.3),
+              color: color.withValues(alpha: 0.3),
             ),
           ),
         ],
@@ -324,7 +324,7 @@ class _SystemInfoScreenState extends State<SystemInfoScreen> {
           drawVerticalLine: false,
           horizontalInterval: maxValue > 0 ? maxValue / 4 : 1,
           getDrawingHorizontalLine: (value) => FlLine(
-            color: Colors.grey.withOpacity(0.3),
+            color: Colors.grey.withValues(alpha: 0.3),
             strokeWidth: 1,
           ),
         ),

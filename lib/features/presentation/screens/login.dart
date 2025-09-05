@@ -23,11 +23,11 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     startUpAppProvider = context.read<StartUpAppProvider>();
-    startUpAppProvider.addListener(_checkAndShowDialog);
-    startUpAppProvider.initialized();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkAndShowDialog();
-    });
+    // startUpAppProvider.addListener(_checkAndShowDialog);
+    // startUpAppProvider.initialized();
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   _checkAndShowDialog();
+    // });
   }
 
   ///df --output=used /dev/${diskName}* | tail -n 1
@@ -38,11 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _checkAndShowDialog() {
-    if(startUpAppProvider.deviceTetheringIP != null){
-      context.read<AuthProvider>().baseUrl = "http://${startUpAppProvider.deviceTetheringIP}:6742";
-    }
-
-    if (!startUpAppProvider.isDeviceTethering && !isDialogShown) {
+    if (!startUpAppProvider.isUsbTethering &&!startUpAppProvider.isDeviceTethering && !isDialogShown) {
       isDialogShown = true;
 
       showDialog(
@@ -52,7 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
           return PopScope(
             canPop: false,
             child: Consumer<StartUpAppProvider>(
-              builder: (context, loginProvider, _) {
+              builder: (context, startUpProvider, _) {
                 return Dialog(
                   backgroundColor: Colors.transparent,
                   child: Card(
@@ -71,7 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               height: 120,
                               fit: BoxFit.fill,
                             ),
-                            if (!loginProvider.isUsbTethering) ...[
+                            if (!startUpProvider.isUsbTethering) ...[
                               Text(
                                 "Usb Tethering Not Found",
                                 style: TextStyle(fontSize: 18),
@@ -141,7 +137,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                 },
                               ),
                             ],
-                            if (loginProvider.isUsbTethering &&!loginProvider.isDeviceTethering)
+                            if (startUpProvider.isUsbTethering &&
+                                !startUpProvider.isDeviceTethering)
                               Text(
                                 'Authenticating & Searching Device...\nIt generaly take less than 1 minute.',
                                 textAlign: TextAlign.center,
@@ -176,6 +173,10 @@ class _LoginScreenState extends State<LoginScreen> {
     // Auto-close dialog when FTP connects
     if (startUpAppProvider.isDeviceTethering && isDialogShown) {
       Navigator.of(context, rootNavigator: true).pop();
+      context.read<AuthProvider>().baseUrl ="http://${startUpAppProvider.deviceTetheringIP}:6742";
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("ip : ${context.read<AuthProvider>().baseUrl}")),
+      );
       isDialogShown = false;
     }
   }
@@ -206,9 +207,8 @@ class PortraitView extends StatefulWidget {
 
 class _PortraitViewState extends State<PortraitView> {
   bool isHidePassword = true;
-  TextEditingController usernameController= TextEditingController();
-  TextEditingController passwordController= TextEditingController();
-
+  TextEditingController usernameController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
 
   @override
   void dispose() {
@@ -221,9 +221,7 @@ class _PortraitViewState extends State<PortraitView> {
   Widget build(BuildContext context) {
     return Center(
       child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: 500.0,
-        ),
+        constraints: BoxConstraints(maxWidth: 500.0),
         child: Card(
           child: Padding(
             padding: EdgeInsetsGeometry.all(16),
@@ -254,13 +252,15 @@ class _PortraitViewState extends State<PortraitView> {
                     hintText: "Enter Password",
                     hintStyle: Theme.of(context).textTheme.labelMedium,
                     suffixIcon: IconButton(
-                      icon: Icon(isHidePassword?Icons.visibility_off:Icons.visibility),
+                      icon: Icon(
+                        isHidePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                      ),
                       onPressed: () {
-                        setState(
-                          (){
-                            isHidePassword=!isHidePassword;
-                          }
-                        );
+                        setState(() {
+                          isHidePassword = !isHidePassword;
+                        });
                       },
                     ),
                   ),
@@ -269,11 +269,11 @@ class _PortraitViewState extends State<PortraitView> {
                 MyElevatedButton(
                   width: double.infinity,
                   height: 45,
-                  onPressed:
-                      widget.authProvider.isLoading
+                  onPressed: widget.authProvider.isLoading
                       ? null
                       : () async {
-                          if (usernameController.text.isEmpty || passwordController.text.isEmpty) {
+                          if (usernameController.text.isEmpty ||
+                              passwordController.text.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
@@ -281,32 +281,45 @@ class _PortraitViewState extends State<PortraitView> {
                                 ),
                               ),
                             );
-                          } else if (!context.read<StartUpAppProvider>().isDeviceTethering) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  "Please wait for making connection.",
-                                ),
-                              ),
-                            );
-                          } else {
-                           try {
-                              await widget.authProvider.login(
-                              usernameController.text.trim(),
-                              passwordController.text.trim()
-                            );
-                            if (widget.authProvider.isAuthenticated) {
-                              if (!context.mounted) return;
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => DashBoardScreen(),
-                                ),
+                          } 
+                          // else if (!context
+                          //     .read<StartUpAppProvider>()
+                          //     .isDeviceTethering) {
+                          //   ScaffoldMessenger.of(context).showSnackBar(
+                          //     SnackBar(
+                          //       content: Text(
+                          //         "Please wait for making connection.",
+                          //       ),
+                          //     ),
+                          //   );
+                          // } 
+                          else {
+                            try {
+                              // await widget.authProvider.login(
+                              //   context,
+                              //   usernameController.text.trim(),
+                              //   passwordController.text.trim(),
+                              // );
+                              await widget.authProvider.mockLogin(
+                                usernameController.text.trim(),
+                                passwordController.text.trim(),
                               );
+                              if (widget.authProvider.isAuthenticated) {
+                                if (!context.mounted) return;
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => DashBoardScreen(),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if(context.mounted){
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(e.toString())),
+                              );
+                              }
                             }
-                           } catch (e) {
-                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
-                           }
                           }
                         },
                   gradient: LinearGradient(
@@ -331,6 +344,9 @@ class _PortraitViewState extends State<PortraitView> {
                                 fontWeight: FontWeight.bold,
                               ),
                         ),
+                ),
+                Text(
+                  widget.authProvider.errorMessage
                 ),
                 const SizedBox(height: 8),
               ],

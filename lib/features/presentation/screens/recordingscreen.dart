@@ -1,10 +1,14 @@
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:usbdataftptest/commom/widgets/animetes_list_item.dart';
 import 'dart:async';
 import '../../../commom/widgets/animate_button.dart';
+import '../../../commom/widgets/categorized_recordings_list.dart';
+import '../../data/models/recordings_model.dart';
+import '../provider/auth/auth_provider.dart';
+import '../provider/auth/get_sys_info_file_management.dart';
 
 // Model classes for API responses
 class TransferEvent {
@@ -47,21 +51,13 @@ class Recordingscreen extends StatefulWidget {
 }
 
 class _RecordingscreenState extends State<Recordingscreen> {
-  // Track selected recordings (using Set to allow multiple selections)
-  Set<int> selectedRecordings = {};
+  late String baseUrl;
+  late String? token;
+  Set<RecordingFileModel> selectedRecordings = {};
 
-  // Track selected drive (only one drive can be selected)
   int? selectedDrive;
 
-  // Sample data - replace with your actual data
-  final List<String> recordingNames = List.generate(
-    10,
-    (index) => "Recording_${index + 1}_08_2025",
-  );
-  final List<String> driveNames = List.generate(
-    5,
-    (index) => "Disk ${index + 1}",
-  );
+  
   final List<String> drivePaths = [
     '/mnt/external/exports',
     '/home/aman/exports',
@@ -80,7 +76,7 @@ class _RecordingscreenState extends State<Recordingscreen> {
     if (selectedRecordings.isEmpty || selectedDrive == null) return;
 
     final selectedFiles = selectedRecordings
-        .map((index) => recordingNames[index])
+        .map((recording) => recording.name ?? "Unknown")
         .toList();
     final destinationPath = drivePaths[selectedDrive!];
 
@@ -112,220 +108,253 @@ class _RecordingscreenState extends State<Recordingscreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    initialized(context);
+  }
+
+  Future<void> initialized(BuildContext context) async {
+    final authProvider = context.read<AuthProvider>();
+    final getSysInfoFileManagement = context.read<GetSysInfoFileManagement>();
+    baseUrl = authProvider.baseUrl;
+    token = await authProvider.getAuthToken();
+    getSysInfoFileManagement.fetchAllRecordingsMock();
+    if (token != null) {
+      // getSysInfoFileManagement.fetchAllRecordings(
+      //   baseUrl: baseUrl,
+      //   token: token!,
+      // );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final getSysInfoFileManagement = context.watch<GetSysInfoFileManagement>();
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Exports Recordings"),
-        leading: SizedBox.shrink(),
-        automaticallyImplyLeading: false,
-        centerTitle: true,
-      ),
       body: Stack(
         children: [
-          Row(
+          Column(
             children: [
-              Flexible(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              SizedBox(height: kToolbarHeight - 8),
+              Expanded(
+                child: Row(
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8.0),
-                      child: Text(
-                        "Recordings",
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: 10,
-                        itemBuilder: (context, index) {
-                          bool isSelected = selectedRecordings.contains(index);
-                          return AnimatedListItem(
-                            delay: Duration(milliseconds: 100 * index), 
-                            child: Padding(
-                              padding: EdgeInsets.only(
-                                left: 8,
-                                right: 8,
-                                bottom: 8,
-                                top: index == 0 ? 8 : 0,
-                              ),
-                              child: GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    if (isSelected) {
-                                      selectedRecordings.remove(index);
-                                    } else {
-                                      selectedRecordings.add(index);
-                                    }
-                                  });
-                                },
-                                child: AnimatedContainer(
-                                  duration: Duration(milliseconds: 300),
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? Colors.blue.withValues(alpha: 0.1)
-                                        : Colors.white,
-                                    border: isSelected
-                                        ? Border.all(color: Colors.blue, width: 1)
-                                        : Border.all(
-                                            color: Colors.white,
-                                            width: 1,
-                                          ),
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: CupertinoListTile(
-                                    padding: EdgeInsets.only(left: 8),
-                                    title: Text(
-                                      recordingNames[index],
-                                      style: Theme.of(context).textTheme.bodySmall
-                                          ?.copyWith(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                            color: isSelected
-                                                ? Colors.blue
-                                                : null,
-                                          ),
-                                    ),
-                                    subtitle: Text(
-                                      "2025-08-02 17:19:48",
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelSmall
-                                          ?.copyWith(
-                                            color: isSelected
-                                                ? Colors.blue
-                                                : null,
-                                          ),
-                                    ),
-                                    backgroundColor: Colors.transparent,
-                                    leadingSize: 60,
-                                    trailing: CupertinoCheckbox(
-                                      value: isSelected,
-                                      onChanged: (value) {
-                                        setState(() {
-                                          if (value == true) {
-                                            selectedRecordings.add(index);
-                                          } else {
-                                            selectedRecordings.remove(index);
-                                          }
-                                        });
-                                      },
-                                    ),
-                                  ),
-                                ),
-                              ),
+                    Flexible(
+                      flex: 6,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Text(
+                              "Recordings",
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                             ),
-                          );
-                        },
+                          ),
+                          Expanded(
+                            child:
+                                getSysInfoFileManagement.recordingFileState ==
+                                    RecordingFileState.loading
+                                ? Center(child: CupertinoActivityIndicator())
+                                : getSysInfoFileManagement.recordingFileState ==
+                                      RecordingFileState.failed
+                                ? Padding(
+                                    padding: const EdgeInsets.all(20.0),
+                                    child: Center(
+                                      child: Text("Failed to get Recordings"),
+                                    ),
+                                  )
+                                : getSysInfoFileManagement.allRecordingsFiles ==
+                                      null
+                                ? Padding(
+                                    padding: const EdgeInsets.all(20.0),
+                                    child: Center(
+                                      child: Text("No Recordinngs found"),
+                                    ),
+                                  )
+                                : CategorizedRecordingsList(
+                                    allRecordingsFiles: getSysInfoFileManagement
+                                        .allRecordingsFiles,
+                                    selectedRecordings: selectedRecordings,
+                                    onSelectionChanged: (recording) {
+                                      // Change parameter type
+                                      setState(() {
+                                        if (selectedRecordings.contains(
+                                          recording,
+                                        )) {
+                                          selectedRecordings.remove(recording);
+                                        } else {
+                                          selectedRecordings.add(recording);
+                                        }
+                                      });
+                                    },
+                                  ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8.0),
-                      child: Text(
-                        "Drives",
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: 5,
-                        itemBuilder: (context, index) {
-                          bool isSelected = selectedDrive == index;
-
-                          return AnimatedListItem(
-                            delay: Duration(milliseconds: 250 * index), 
-                            child: Padding(
-                              padding: EdgeInsets.only(
-                                right: 8,
-                                bottom: 8,
-                                top: index == 0 ? 8 : 0,
-                              ),
-                              child: GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    selectedDrive = isSelected ? null : index;
-                                  });
-                                },
-                                child: AnimatedContainer(
-                                  duration: Duration(milliseconds: 300),
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? Colors.green.withValues(alpha: 0.1)
-                                        : Colors.white,
-                                    border: isSelected
-                                        ? Border.all(
-                                            color: Colors.green,
-                                            width: 1,
-                                          )
-                                        : Border.all(
-                                            color: Colors.white,
-                                            width: 1,
-                                          ),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  padding: EdgeInsets.symmetric(
-                                    vertical: 8,
-                                    horizontal: 12,
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      FaIcon(
-                                        FontAwesomeIcons.hardDrive,
-                                        size: 16,
-                                        color: isSelected ? Colors.green : null,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            driveNames[index],
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodySmall
-                                                ?.copyWith(
-                                                  fontWeight: FontWeight.bold,
-                                                  color: isSelected
-                                                      ? Colors.green
-                                                      : null,
-                                                ),
-                                          ),
-                                          Text(
-                                            "Available: ${index + 1}GB",
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .labelSmall
-                                                ?.copyWith(
-                                                  color: isSelected
-                                                      ? Colors.green
-                                                      : null,
-                                                ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      flex: 5,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Text(
+                              "Drives",
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                             ),
-                          );
-                        },
+                          ),
+                          Expanded(
+                            child:
+                                (getSysInfoFileManagement
+                                        .systemInfoModel
+                                        .isNotEmpty &&
+                                    getSysInfoFileManagement
+                                            .systemInfoModel[getSysInfoFileManagement
+                                                    .systemInfoModel
+                                                    .length -
+                                                1]
+                                            .hardDisk !=
+                                        null &&
+                                    getSysInfoFileManagement
+                                            .systemInfoModel[getSysInfoFileManagement
+                                                    .systemInfoModel
+                                                    .length -
+                                                1]
+                                            .hardDisk
+                                            ?.disks !=
+                                        null &&
+                                    getSysInfoFileManagement
+                                        .systemInfoModel[getSysInfoFileManagement
+                                                .systemInfoModel
+                                                .length -
+                                            1]
+                                        .hardDisk!
+                                        .disks!
+                                        .isNotEmpty)
+                                ? ListView.builder(
+                                    itemCount: getSysInfoFileManagement
+                                        .systemInfoModel[getSysInfoFileManagement
+                                                .systemInfoModel
+                                                .length -
+                                            1]
+                                        .hardDisk
+                                        ?.disks
+                                        ?.length, // show latest hardisk
+                                    itemBuilder: (context, index) {
+                                      bool isSelected = selectedDrive == index;
+                                      final disk = getSysInfoFileManagement
+                                          .systemInfoModel[getSysInfoFileManagement
+                                                  .systemInfoModel
+                                                  .length -
+                                              1]
+                                          .hardDisk
+                                          ?.disks![index];
+                                      return AnimatedListItem(
+                                        delay: Duration(
+                                          milliseconds: 250 * index,
+                                        ),
+                                        child: Padding(
+                                          padding: EdgeInsets.only(
+                                            right: 8,
+                                            bottom: 8,
+                                            top: index == 0 ? 8 : 0,
+                                          ),
+                                          child: GestureDetector(
+                                            onTap: () {
+                                              setState(() {
+                                                selectedDrive = isSelected
+                                                    ? null
+                                                    : index;
+                                              });
+                                            },
+                                            child: AnimatedContainer(
+                                              duration: Duration(
+                                                milliseconds: 300,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: isSelected
+                                                    ? Colors.green.withValues(
+                                                        alpha: 0.1,
+                                                      )
+                                                    : Colors.white,
+                                                border: isSelected
+                                                    ? Border.all(
+                                                        color: Colors.green,
+                                                        width: 1,
+                                                      )
+                                                    : Border.all(
+                                                        color: Colors.white,
+                                                        width: 1,
+                                                      ),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                              padding: EdgeInsets.symmetric(
+                                                vertical: 8,
+                                                horizontal: 12,
+                                              ),
+                                              child: Row(
+                                                children: [
+                                                  FaIcon(
+                                                    FontAwesomeIcons.hardDrive,
+                                                    size: 16,
+                                                    color: isSelected
+                                                        ? Colors.green
+                                                        : null,
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    children: [
+                                                      Text(
+                                                        disk?.name ?? "Unknown",
+                                                        style: Theme.of(context)
+                                                            .textTheme
+                                                            .bodySmall
+                                                            ?.copyWith(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                              color: isSelected
+                                                                  ? Colors.green
+                                                                  : null,
+                                                            ),
+                                                      ),
+                                                      Text(
+                                                        "Available: ${(disk?.totalGb ?? 0) - (disk?.usedGb ?? 0)}GB",
+                                                        style: Theme.of(context)
+                                                            .textTheme
+                                                            .labelSmall
+                                                            ?.copyWith(
+                                                              color: isSelected
+                                                                  ? Colors.green
+                                                                  : null,
+                                                            ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  )
+                                : Center(child: Text("No Derives Found !")),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -584,7 +613,7 @@ class _TransferProgressDialogState extends State<TransferProgressDialog> {
   }
 
   String _formatBytes(int bytes) {
-    if (bytes < 1024) return '${bytes} B';
+    if (bytes < 1024) return '$bytes B';
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
     if (bytes < 1024 * 1024 * 1024) {
       return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';

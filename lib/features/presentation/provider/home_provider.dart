@@ -9,7 +9,7 @@ import '../../../core/helper.dart';
 enum LoginState { loading, loginSuccess, loginFailed, noLogin }
 
 /// Represents the different states of the ftp connection
-enum FtpConnectionState { loading, success, failed, none }
+// enum FtpConnectionState { loading, success, failed, none }
 
 /// LoginProvider manages:
 /// 1. USB tethering status.

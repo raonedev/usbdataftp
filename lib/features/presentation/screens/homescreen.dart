@@ -1,3 +1,4 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -23,14 +24,9 @@ class HomeScreen extends StatelessWidget {
       ),
     );
 
-    final getSysInfoFileManagementProvider =context.watch<GetSysInfoFileManagement>(); 
-    final ipCameras = getSysInfoFileManagementProvider.ipCameras;
-    final systemInfoModel = getSysInfoFileManagementProvider.systemInfoModel;
-
-    // return context.watch<StartUpAppProvider>().filedata == null
-    //     ? Center(child: CupertinoActivityIndicator(color: Colors.black))
-    //     : 
-       return SafeArea(
+    return context.watch<GetSysInfoFileManagement>().systemInfoModel.isEmpty
+        ? Center(child: CupertinoActivityIndicator(color: Colors.black))
+        : SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: SingleChildScrollView(
@@ -62,7 +58,7 @@ class HomeScreen extends StatelessWidget {
                                 ),
                                 Text(
                                   // loginProvider.filedata!.activeCamera?.toString() ??'0',
-                                  "${ipCameras?.cameras?.where((c) => c.isActive == true && c.deviceType=="Camera").length ?? 0}",
+                                  "${context.watch<GetSysInfoFileManagement>().ipCameras?.cameras?.where((c) => c.isActive == true && c.deviceType?.toLowerCase() == "camera").length ?? 0}",
                                   style: TextStyle(
                                     color: Colors.black,
                                     fontSize: 32,
@@ -97,7 +93,7 @@ class HomeScreen extends StatelessWidget {
                                 ),
                                 Text(
                                   // loginProvider.filedata!.unactiveCamera?.toString() ?? '0',
-                                  "${ipCameras?.cameras?.where((c) => c.isActive == false && c.deviceType=="Camera").length ?? 0}",
+                                  "${context.watch<GetSysInfoFileManagement>().ipCameras?.cameras?.where((c) => c.isActive == false && c.deviceType?.toLowerCase() == "camera").length ?? 0}",
                                   style: TextStyle(
                                     color: Colors.black,
                                     fontSize: 32,
@@ -130,12 +126,24 @@ class HomeScreen extends StatelessWidget {
                                 SubTitleWeidget(
                                   // subtitle: "Total: ${loginProvider.filedata!.storage?.totalGb?.toStringAsFixed(0) ?? '0'}GB",
                                   // trailingText: "${((loginProvider.filedata!.storage?.usage ?? 0) / (loginProvider.filedata!.storage?.totalGb ?? 1) * 100).toStringAsFixed(0)}%",
-                                  subtitle: "Total: ${systemInfoModel[systemInfoModel.length-1].storage?.totalGb??0}",
-                                  trailingText: "${((systemInfoModel[systemInfoModel.length-1].storage?.usedGb ?? 0) / (systemInfoModel[systemInfoModel.length-1].storage?.totalGb ?? 1) * 100).toStringAsFixed(0)}%",
+                                  subtitle:
+                                      "Total: ${context.watch<GetSysInfoFileManagement>().systemInfoModel[context.watch<GetSysInfoFileManagement>().systemInfoModel.length - 1].storage?.totalGb ?? 0}",
+                                  trailingText:
+                                      "${((context.watch<GetSysInfoFileManagement>().systemInfoModel[context.watch<GetSysInfoFileManagement>().systemInfoModel.length - 1].storage?.usedGb ?? 0) / (context.watch<GetSysInfoFileManagement>().systemInfoModel[context.watch<GetSysInfoFileManagement>().systemInfoModel.length - 1].storage?.totalGb ?? 1) * 100).toStringAsFixed(0)}%",
                                 ),
                                 const SizedBox(height: 4),
                                 GradientProgressBar(
-                                  value:(systemInfoModel[systemInfoModel.length-1].storage?.usedGb ??0) / (systemInfoModel[systemInfoModel.length-1].storage?.totalGb ??1),
+                                  value:
+                                      (context.watch<GetSysInfoFileManagement>().systemInfoModel[context.watch<GetSysInfoFileManagement>().systemInfoModel.length -
+                                                  1]
+                                              .storage
+                                              ?.usedGb ??
+                                          0) /
+                                      (context.watch<GetSysInfoFileManagement>().systemInfoModel[context.watch<GetSysInfoFileManagement>().systemInfoModel.length -
+                                                  1]
+                                              .storage
+                                              ?.totalGb ??
+                                          1),
                                 ),
                               ],
                             ),
@@ -159,17 +167,31 @@ class HomeScreen extends StatelessWidget {
                                   icon: FontAwesomeIcons.memory,
                                 ),
                                 Spacer(),
-                                SubTitleWeidget(
-                                  // subtitle:"Total: ${loginProvider.filedata!.ram?.totalGb?.toStringAsFixed(0) ?? '0'}GB",
-                                  // trailingText:"${loginProvider.filedata!.ram?.usage}%",
-                                  subtitle:"Total: ${systemInfoModel[systemInfoModel.length-1].ram?.totalGb?.toStringAsFixed(0) ?? '0'}GB",
-                                  trailingText:"${systemInfoModel[systemInfoModel.length-1].ram?.usagePercentage}%",
+                                SizedBox(
+                                  height: 25,
+                                  width: 200,
+                                  child: _buildLineChart(
+                                    context.watch<GetSysInfoFileManagement>().systemInfoModel
+                                        .map(
+                                          (info) =>
+                                              info.ram?.usagePercentage ?? 0.0,
+                                        ) // fallback to 0 if null
+                                        .toList(),
+                                    Colors.blue,
+                                    maxY: 100,
+                                  ),
+                                ),
+                                // SubTitleWeidget(
+                                //   // subtitle:"Total: ${loginProvider.filedata!.ram?.totalGb?.toStringAsFixed(0) ?? '0'}GB",
+                                //   // trailingText:"${loginProvider.filedata!.ram?.usage}%",
+                                //   subtitle:"Total: ${context.watch<GetSysInfoFileManagement>().systemInfoModel[context.watch<GetSysInfoFileManagement>().systemInfoModel.length-1].ram?.totalGb?.toStringAsFixed(0) ?? '0'}GB",
+                                //   trailingText:"${context.watch<GetSysInfoFileManagement>().systemInfoModel[context.watch<GetSysInfoFileManagement>().systemInfoModel.length-1].ram?.usagePercentage?.toStringAsFixed(2)}%",
 
-                                ),
-                                const SizedBox(height: 4),
-                                GradientProgressBar(
-                                  value: (systemInfoModel[systemInfoModel.length-1].ram?.usagePercentage ??0) /100,
-                                ),
+                                // ),
+                                // const SizedBox(height: 4),
+                                // GradientProgressBar(
+                                //   value: (context.watch<GetSysInfoFileManagement>().systemInfoModel[context.watch<GetSysInfoFileManagement>().systemInfoModel.length-1].ram?.usagePercentage ??0) /100,
+                                // ),
                               ],
                             ),
                           ),
@@ -195,16 +217,24 @@ class HomeScreen extends StatelessWidget {
                                 Spacer(),
                                 SubTitleWeidget(
                                   subtitle: "CPU Usage",
-                                  trailingText:"${systemInfoModel[systemInfoModel.length-1].cpu?.usagePercent?.toStringAsFixed(0) ?? '0'}%",
+                                  trailingText:
+                                      "${context.watch<GetSysInfoFileManagement>().systemInfoModel[context.watch<GetSysInfoFileManagement>().systemInfoModel.length - 1].cpu?.usagePercent?.toStringAsFixed(0) ?? '0'}%",
                                 ),
                                 const SizedBox(height: 4),
                                 GradientProgressBar(
-                                  value:(systemInfoModel[systemInfoModel.length-1].cpu?.usagePercent ??0) /100,
+                                  value:
+                                      (context.watch<GetSysInfoFileManagement>().systemInfoModel[context.watch<GetSysInfoFileManagement>().systemInfoModel.length -
+                                                  1]
+                                              .cpu
+                                              ?.usagePercent ??
+                                          0) /
+                                      100,
                                 ),
                                 const SizedBox(height: 8),
                                 SubTitleWeidget(
                                   subtitle: "Temperature",
-                                  trailingText: "${systemInfoModel[systemInfoModel.length-1].cpu?.temperatureCelsius?.toStringAsFixed(1) ?? '0'}°C",
+                                  trailingText:
+                                      "${context.watch<GetSysInfoFileManagement>().systemInfoModel[context.watch<GetSysInfoFileManagement>().systemInfoModel.length - 1].cpu?.temperatureCelsius?.toStringAsFixed(1) ?? '0'}°C",
                                 ),
                               ],
                             ),
@@ -232,12 +262,15 @@ class HomeScreen extends StatelessWidget {
                                 SubTitleWeidget(
                                   subtitle: "GPU Usage",
                                   trailingText:
-                                      "${systemInfoModel[systemInfoModel.length-1].gpu?.usagePercent?.toStringAsFixed(0) ?? '0'}%",
+                                      "${context.watch<GetSysInfoFileManagement>().systemInfoModel[context.watch<GetSysInfoFileManagement>().systemInfoModel.length - 1].gpu?.usagePercent?.toStringAsFixed(0) ?? '0'}%",
                                 ),
                                 const SizedBox(height: 4),
                                 GradientProgressBar(
                                   value:
-                                      (systemInfoModel[systemInfoModel.length-1].gpu?.usagePercent ??
+                                      (context.watch<GetSysInfoFileManagement>().systemInfoModel[context.watch<GetSysInfoFileManagement>().systemInfoModel.length -
+                                                  1]
+                                              .gpu
+                                              ?.usagePercent ??
                                           0) /
                                       100,
                                 ),
@@ -245,7 +278,7 @@ class HomeScreen extends StatelessWidget {
                                 SubTitleWeidget(
                                   subtitle: "Temperature",
                                   trailingText:
-                                      "${systemInfoModel[systemInfoModel.length-1].gpu?.temperatureCelsius?.toStringAsFixed(1) ?? '0'}°C",
+                                      "${context.watch<GetSysInfoFileManagement>().systemInfoModel[context.watch<GetSysInfoFileManagement>().systemInfoModel.length - 1].gpu?.temperatureCelsius?.toStringAsFixed(1) ?? '0'}°C",
                                 ),
                               ],
                             ),
@@ -280,9 +313,11 @@ class HomeScreen extends StatelessWidget {
                                         ),
                                       ),
                                       // ...?loginProvider.filedata!.ipCameras
-                                      ...?ipCameras?.cameras
+                                      ...?context.watch<GetSysInfoFileManagement>().ipCameras?.cameras
                                           ?.where(
-                                            (camera) => camera.isActive == true && camera.deviceType=="Camera",
+                                            (camera) =>
+                                                camera.isActive == true &&
+                                                camera.deviceType?.toLowerCase() == "camera",
                                           )
                                           .map(
                                             (camera) => Column(
@@ -317,9 +352,11 @@ class HomeScreen extends StatelessWidget {
                                         ),
                                       ),
                                       // ...?loginProvider.filedata!.ipCameras
-                                      ...?ipCameras?.cameras
+                                      ...?context.watch<GetSysInfoFileManagement>().ipCameras?.cameras
                                           ?.where(
-                                            (camera) => camera.isActive != true && camera.deviceType=="Camera",
+                                            (camera) =>
+                                                camera.isActive != true &&
+                                                camera.deviceType?.toLowerCase() == "camera",
                                           )
                                           .map(
                                             (camera) => Column(
@@ -366,7 +403,8 @@ class HomeScreen extends StatelessWidget {
                             tooltipBehavior = TooltipBehavior(
                               duration: 800,
                               enable: true,
-                              activationMode: ActivationMode.none, // We will control it manually
+                              activationMode: ActivationMode
+                                  .none, // We will control it manually
                               builder:
                                   (
                                     dynamic data,
@@ -396,14 +434,23 @@ class HomeScreen extends StatelessWidget {
                             );
 
                             // final hardDisks =loginProvider.filedata?.hardDisk ?? [];
-                            final hardDisks =systemInfoModel[systemInfoModel.length-1].hardDisk?.disks ??[];
-                            final chartData = hardDisks.map(
+                            final hardDisks =
+                                context.watch<GetSysInfoFileManagement>().systemInfoModel[context.watch<GetSysInfoFileManagement>().systemInfoModel.length - 1]
+                                    .hardDisk
+                                    ?.disks ??
+                                [];
+                            final chartData = hardDisks
+                                .map(
                                   (disk) => ChartData(
                                     disk.name ?? 'Unknown',
-                                    ((disk.usedGb ?? 0) / (disk.totalGb ?? 1) * 100).clamp(0, 100),
+                                    ((disk.usedGb ?? 0) /
+                                            (disk.totalGb ?? 1) *
+                                            100)
+                                        .clamp(0, 100),
                                     disk.status ?? 'Unknown',
                                   ),
-                                ).toList();
+                                )
+                                .toList();
 
                             return Card(
                               color: Colors.white,
@@ -442,13 +489,20 @@ class HomeScreen extends StatelessWidget {
                                                 cornerStyle:CornerStyle.bothCurve,
                                                 gap: "5%",
                                                 radius: '100%',
-                                                innerRadius: '30%',
-                                                pointColorMapper : (ChartData data, _) =>data.status == 'Healthy'? Colors.green: Colors.red,
-                                                dataLabelSettings : DataLabelSettings(isVisible: false,),
+                                                innerRadius: '40%',
+                                                pointColorMapper: (ChartData data, _) =>data.status == 'Healthy'? Colors.green: Colors.red,
+                                                dataLabelSettings:
+                                                    DataLabelSettings(
+                                                      isVisible: false,
+                                                    ),
                                                 maximumValue: 100,
+                                                
                                               ),
                                             ],
-                                            annotations:const <CircularChartAnnotation>[],
+                                            annotations:
+                                                const <
+                                                  CircularChartAnnotation
+                                                >[],
                                           ),
                                         ),
                                         // Annotations outside and to the right
@@ -586,10 +640,10 @@ class HomeScreen extends StatelessWidget {
                                   child: ListView.builder(
                                     physics: const ClampingScrollPhysics(),
                                     // itemCount: loginProvider.filedata!.ipCameras?.length ??0,
-                                    itemCount: ipCameras?.cameras?.length ??0,
+                                    itemCount: context.watch<GetSysInfoFileManagement>().ipCameras?.cameras?.length ?? 0,
                                     itemBuilder: (context, index) {
                                       // final camera = loginProvider.filedata!.ipCameras![index];
-                                      final camera = ipCameras?.cameras![index];
+                                      final camera = context.watch<GetSysInfoFileManagement>().ipCameras?.cameras![index];
                                       return Column(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
@@ -607,13 +661,13 @@ class HomeScreen extends StatelessWidget {
                                                 camera?.isRecording == true
                                                     ? CupertinoIcons
                                                           .checkmark_circle_fill
-                                                    : CupertinoIcons.clear_thick_circled,
+                                                    : CupertinoIcons
+                                                          .clear_thick_circled,
                                                 size: 16,
-                                                        color:
-                                                          camera?.isRecording ==
-                                                              true
-                                                          ? Colors.green
-                                                          : Colors.red,
+                                                color:
+                                                    camera?.isRecording == true
+                                                    ? Colors.green
+                                                    : Colors.red,
                                               ),
                                             ],
                                           ),
@@ -649,12 +703,14 @@ class HomeScreen extends StatelessWidget {
                                 SubTitleWeidget(
                                   subtitle: "Upload Speed",
                                   // trailingText: "${loginProvider.filedata!.network?.uploadSpeedMbps?.toStringAsFixed(1) ?? '0'} Mbps",
-                                  trailingText: "${systemInfoModel[systemInfoModel.length-1].network?.uploadSpeedKIB?.toStringAsFixed(1) ?? '0'} KIBps",
+                                  trailingText:
+                                      "${context.watch<GetSysInfoFileManagement>().systemInfoModel[context.watch<GetSysInfoFileManagement>().systemInfoModel.length - 1].network?.uploadSpeedKIB?.toStringAsFixed(1) ?? '0'} KIBps",
                                 ),
                                 const SizedBox(height: 8),
                                 SubTitleWeidget(
                                   subtitle: "Download Speed",
-                                  trailingText: "${systemInfoModel[systemInfoModel.length-1].network?.downloadSpeedKib?.toStringAsFixed(1) ?? '0'} KIBps",
+                                  trailingText:
+                                      "${context.watch<GetSysInfoFileManagement>().systemInfoModel[context.watch<GetSysInfoFileManagement>().systemInfoModel.length - 1].network?.downloadSpeedKib?.toStringAsFixed(1) ?? '0'} KIBps",
                                 ),
                               ],
                             ),
@@ -680,16 +736,19 @@ class HomeScreen extends StatelessWidget {
                                 const SizedBox(height: 4),
                                 Text(
                                   // "Total: ${loginProvider.filedata!.audioDevices?.total?.toString() ?? '0'}",
-                                  "Total: ${ipCameras?.cameras?.where((c) => c.deviceType=="Audio").length ?? 0}",
+                                  "Total: ${context.watch<GetSysInfoFileManagement>().ipCameras?.cameras?.where((c) => c.deviceType?.toLowerCase() == "audio").length ?? 0}",
                                 ),
                                 const SizedBox(height: 4),
                                 Expanded(
                                   child: ListView(
                                     // children: loginProvider.filedata!.audioDevices?.devices
-                                    children: ipCameras?.cameras
-                                          ?.where(
-                                            (camera) => camera.deviceType=="Audio",
-                                          ).map(
+                                    children:
+                                        context.watch<GetSysInfoFileManagement>().ipCameras?.cameras
+                                            ?.where(
+                                              (camera) =>
+                                                  camera.deviceType?.toLowerCase() == "audio",
+                                            )
+                                            .map(
                                               (device) => Column(
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
@@ -699,7 +758,8 @@ class HomeScreen extends StatelessWidget {
                                                             .spaceBetween,
                                                     children: [
                                                       Text(
-                                                        device.name??"Unknown",
+                                                        device.name ??
+                                                            "Unknown",
                                                         style: TextStyle(
                                                           color: Colors.black,
                                                           fontSize: 12,
@@ -707,7 +767,11 @@ class HomeScreen extends StatelessWidget {
                                                       ),
                                                       Icon(
                                                         Icons.mic,
-                                                        color: device.isActive==true? Colors.blue:Colors.red,
+                                                        color:
+                                                            device.isActive ==
+                                                                true
+                                                            ? Colors.blue
+                                                            : Colors.red,
                                                         size: 16,
                                                       ),
                                                     ],
@@ -746,13 +810,25 @@ class HomeScreen extends StatelessWidget {
                                 SubTitleWeidget(
                                   subtitle: "Logitude",
                                   // trailingText: loginProvider.filedata!.location?.city ?? 'Unknown',
-                                  trailingText: systemInfoModel[systemInfoModel.length-1].location?.longitude?.toString() ?? '0',
+                                  trailingText:
+                                      context.watch<GetSysInfoFileManagement>().systemInfoModel[context.watch<GetSysInfoFileManagement>().systemInfoModel.length -
+                                              1]
+                                          .location
+                                          ?.longitude
+                                          ?.toStringAsFixed(7) ??
+                                      '0',
                                 ),
                                 const SizedBox(height: 8),
                                 SubTitleWeidget(
                                   subtitle: "Latitude",
                                   // trailingText:"${loginProvider.filedata!.location?.latitude?.toStringAsFixed(2) ?? '0'}, ${loginProvider.filedata!.location?.longitude?.toStringAsFixed(2) ?? '0'}",
-                                  trailingText:systemInfoModel[systemInfoModel.length-1].location?.latitude?.toString() ?? '0',
+                                  trailingText:
+                                      context.watch<GetSysInfoFileManagement>().systemInfoModel[context.watch<GetSysInfoFileManagement>().systemInfoModel.length -
+                                              1]
+                                          .location
+                                          ?.latitude
+                                          ?.toStringAsFixed(7) ??
+                                      '0',
                                 ),
                               ],
                             ),
@@ -766,6 +842,76 @@ class HomeScreen extends StatelessWidget {
             ),
           );
   }
+
+Widget _buildLineChart(List<double> data, Color color, {double maxY = 100}) {
+  if (data.isEmpty) {
+    return const Center(child: Text('No data available'));
+  }
+
+  final latestValue = data.last;
+
+  return Row(
+    crossAxisAlignment: CrossAxisAlignment.end,
+    children: [
+      Expanded(
+        child: ClipRRect(
+          borderRadius: BorderRadiusGeometry.circular(4),
+          child: Material(
+            color: Colors.grey.withValues(alpha: 0.1),
+            child: LineChart(
+              LineChartData(
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  horizontalInterval: maxY ,
+                  getDrawingHorizontalLine: (value) =>
+                      FlLine(color: Colors.grey.withValues(alpha: 0.3), strokeWidth: 1),
+                ),
+                titlesData: FlTitlesData(
+                  leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                ),
+                borderData: FlBorderData(show: false),
+                minX: 0,
+                maxX: (data.length - 1).toDouble(),
+                minY: 0,
+                maxY: maxY,
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: data.asMap().entries.map((entry) {
+                      return FlSpot(entry.key.toDouble(), entry.value);
+                    }).toList(),
+                    isCurved: true,
+                    color: color,
+                    barWidth: 1,
+                    dotData: FlDotData(show: false),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      color: color.withValues(alpha: 0.3),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+      SizedBox(width: 8),
+      // Latest value on right
+      Text(
+        "${latestValue.toStringAsFixed(1)}%",
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.bold,
+          fontSize: 14,
+        ),
+      ),
+    ],
+  );
+}
+
 }
 
 class ChartData {
@@ -811,6 +957,7 @@ class SubTitleWeidget extends StatelessWidget {
               color: Colors.black,
               fontSize: 10,
               fontWeight: FontWeight.bold,
+              overflow: TextOverflow.fade,
             ),
           ),
         ],

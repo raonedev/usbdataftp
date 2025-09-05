@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:usbdataftptest/features/presentation/provider/auth/auth_provider.dart';
-import 'package:usbdataftptest/features/presentation/provider/auth/get_sys_info_file_management.dart';
+import '../provider/auth/auth_provider.dart';
+import '../provider/auth/get_sys_info_file_management.dart';
 import 'homescreen.dart';
 import 'recordingscreen.dart';
 import '../provider/home_provider.dart';
@@ -32,17 +32,24 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
     final authProvider = context.read<AuthProvider>();
     final getSysInfoFileManagement = context.read<GetSysInfoFileManagement>();
     baseUrl = authProvider.baseUrl;
-    token = await authProvider.getAuthToken();
-    getSysInfoFileManagement.connectToSysInfoStream(
-      baseUrl: baseUrl,
-      token: token!,
-    );
+    // token = await authProvider.getAuthToken();
+    // getSysInfoFileManagement.connectToSysInfoStream(
+    //   baseUrl: baseUrl,
+    //   token: token!,
+    // );
+    // getSysInfoFileManagement.fetchIpCameras(
+    //     baseUrl: baseUrl,
+    //     token: token!
+    //   );
+    getSysInfoFileManagement.fetchMockCameras();
+    getSysInfoFileManagement.connectToSysInfoStreamMock();
      _fetchTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
       // Call your method here
-      getSysInfoFileManagement.fetchIpCameras(
-        baseUrl: baseUrl,
-        token: token!
-      );
+      // getSysInfoFileManagement.fetchIpCameras(
+      //   baseUrl: baseUrl,
+      //   token: token!
+      // );
+      getSysInfoFileManagement.fetchMockCameras();
     });
   }
 

@@ -48,7 +48,7 @@
   },
   "cpu": {
     "usage": 5,
-    "temperature_celsius": null
+    "temperature_celsius": 30
   },
   "location": {
     "_id": "68a994c0c22d99affe0bef23",

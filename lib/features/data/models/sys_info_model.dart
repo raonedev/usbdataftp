@@ -26,7 +26,7 @@ class SystemInfoModel {
     Network? network,
     Cpu? cpu,
     Location? location,
-    Gpu? gpu
+    Gpu? gpu,
   }) {
     return SystemInfoModel(
       ram: ram ?? this.ram,
@@ -35,30 +35,45 @@ class SystemInfoModel {
       network: network ?? this.network,
       cpu: cpu ?? this.cpu,
       location: location ?? this.location,
-      gpu: gpu ?? this.gpu
+      gpu: gpu ?? this.gpu,
     );
   }
-
 
   factory SystemInfoModel.fromMap(Map<String, dynamic> map) {
     return SystemInfoModel(
-      ram: map['ram'] != null ? Ram.fromMap(map['ram'] as Map<String,dynamic>) : null,
-      storage: map['storage'] != null ? Storage.fromMap(map['storage'] as Map<String,dynamic>) : null,
+      ram: map['ram'] != null
+          ? Ram.fromMap(map['ram'] as Map<String, dynamic>)
+          : null,
+      storage: map['storage'] != null
+          ? Storage.fromMap(map['storage'] as Map<String, dynamic>)
+          : null,
       // hardDisk: map['hard_disk'] != null ? HardDisk.fromMap(map['hard_disk'] as Map<String,dynamic>) : null,
-       hardDisk: map['hard_disk'] != null
-        ? HardDisk(disks: List<Disk>.from(
-            (map['hard_disk'] as List<dynamic>)
-                .map((x) => Disk.fromMap(x as Map<String, dynamic>)),
-          ))
-        : null,
-      network: map['network'] != null ? Network.fromMap(map['network'] as Map<String,dynamic>) : null,
-      cpu: map['cpu'] != null ? Cpu.fromMap(map['cpu'] as Map<String,dynamic>) : null,
-      location: map['location'] != null ? Location.fromMap(map['location'] as Map<String,dynamic>) : null,
-      gpu: map['gpu'] != null ? Gpu.fromMap(map['gpu'] as Map<String,dynamic>) : null,
+      hardDisk: map['hard_disk'] != null
+          ? HardDisk(
+              disks: List<Disk>.from(
+                (map['hard_disk'] as List<dynamic>).map(
+                  (x) => Disk.fromMap(x as Map<String, dynamic>),
+                ),
+              ),
+            )
+          : null,
+      network: map['network'] != null
+          ? Network.fromMap(map['network'] as Map<String, dynamic>)
+          : null,
+      cpu: map['cpu'] != null
+          ? Cpu.fromMap(map['cpu'] as Map<String, dynamic>)
+          : null,
+      location: map['location'] != null
+          ? Location.fromMap(map['location'] as Map<String, dynamic>)
+          : null,
+      gpu: map['gpu'] != null
+          ? Gpu.fromMap(map['gpu'] as Map<String, dynamic>)
+          : null,
     );
   }
 
-  factory SystemInfoModel.fromJson(String source) => SystemInfoModel.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory SystemInfoModel.fromJson(String source) =>
+      SystemInfoModel.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
   String toString() {
@@ -78,11 +93,11 @@ class Ram {
   factory Ram.fromMap(Map<String, dynamic> map) {
     return Ram(
       usagePercentage: map['usage_percent'] != null
-          ? map['usage_percent'] as double
+          ? (map['usage_percent'] as num).toDouble()
           : null,
-      totalGb: map['total_gb'] != null ? map['total_gb'] as double : null,
-      usedGb: map['used_gb'] != null ? map['used_gb'] as double : null,
-      freeGb: map['free_gb'] != null ? map['free_gb'] as double : null,
+      totalGb: map['total_gb'] != null ? (map['total_gb'] as num).toDouble() : null,
+      usedGb: map['used_gb'] != null ? (map['used_gb'] as num).toDouble() : null,
+      freeGb: map['free_gb'] != null ? (map['free_gb'] as num).toDouble() : null,
     );
   }
 
@@ -139,9 +154,9 @@ class Cpu {
 
   factory Cpu.fromMap(Map<String, dynamic> map) {
     return Cpu(
-      usagePercent: map['usage'] != null ? map['usage'] as int : null,
+      usagePercent: map['usage'] != null ? (map['usage'] as num).toInt() : null,
       temperatureCelsius: map['temperature_celsius'] != null
-          ? map['temperature_celsius'] as double
+          ? (map['temperature_celsius'] as num).toDouble()
           : null,
     );
   }
@@ -235,7 +250,6 @@ class Disk {
   }
 }
 
-
 ///---------- location ---------------
 class Location {
   String? id;
@@ -298,8 +312,12 @@ class Location {
       time: map['Time'] != null ? map['Time'] as String : null,
       latitude: map['Latitude'] != null ? map['Latitude'] as double : null,
       longitude: map['Longitude'] != null ? map['Longitude'] as double : null,
-      fixQuality: map['FixQuality'] != null ? map['FixQuality'] as String : null,
-      noOfSatellite: map['NoOfSatellite'] != null ? map['NoOfSatellite'] as String : null,
+      fixQuality: map['FixQuality'] != null
+          ? map['FixQuality'] as String
+          : null,
+      noOfSatellite: map['NoOfSatellite'] != null
+          ? map['NoOfSatellite'] as String
+          : null,
       altitude: map['Altitude'] != null ? map['Altitude'] as String : null,
       course: map['Course'] != null ? map['Course'] as String : null,
     );
@@ -307,7 +325,8 @@ class Location {
 
   String toJson() => json.encode(toMap());
 
-  factory Location.fromJson(String source) => Location.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory Location.fromJson(String source) =>
+      Location.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
   String toString() {
@@ -317,31 +336,29 @@ class Location {
   @override
   bool operator ==(covariant Location other) {
     if (identical(this, other)) return true;
-  
-    return 
-      other.id == id &&
-      other.time == time &&
-      other.latitude == latitude &&
-      other.longitude == longitude &&
-      other.fixQuality == fixQuality &&
-      other.noOfSatellite == noOfSatellite &&
-      other.altitude == altitude &&
-      other.course == course;
+
+    return other.id == id &&
+        other.time == time &&
+        other.latitude == latitude &&
+        other.longitude == longitude &&
+        other.fixQuality == fixQuality &&
+        other.noOfSatellite == noOfSatellite &&
+        other.altitude == altitude &&
+        other.course == course;
   }
 
   @override
   int get hashCode {
     return id.hashCode ^
-      time.hashCode ^
-      latitude.hashCode ^
-      longitude.hashCode ^
-      fixQuality.hashCode ^
-      noOfSatellite.hashCode ^
-      altitude.hashCode ^
-      course.hashCode;
+        time.hashCode ^
+        latitude.hashCode ^
+        longitude.hashCode ^
+        fixQuality.hashCode ^
+        noOfSatellite.hashCode ^
+        altitude.hashCode ^
+        course.hashCode;
   }
 }
-
 
 ///--------GPU-----------
 class Gpu {
@@ -352,7 +369,7 @@ class Gpu {
 
   factory Gpu.fromMap(Map<String, dynamic> map) {
     return Gpu(
-      usagePercent: map['usage'] != null ? map['usage'] as int : null,
+      usagePercent: map['usage'] != null ? (map['usage'] as num).toInt() : null,
       temperatureCelsius: map['temperature_celsius'] != null
           ? map['temperature_celsius'] as double
           : null,

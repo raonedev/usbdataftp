@@ -1,54 +1,44 @@
 {
-  "ip_cameras": [
-    {
-      "name": "192.168.29.203",
-      "host": "192.168.29.203",
-      "port": 8088,
-      "isActive": true,
-      "isRecording": false,
-      "mac_address": "18:74:E2:D1:96:89",
-      "device_type": "CAMERA",
-      "legacy_id": 254
-    },
-    {
-      "name": "192.168.29.204",
-      "host": "192.168.29.204",
-      "port": 8088,
-      "isActive": false,
-      "isRecording": false,
-      "mac_address": "18:74:E2:D1:96:91",
-      "device_type": "CAMERA",
-      "legacy_id": 255
-    },
-    {
-      "name": "192.168.29.200",
-      "host": "192.168.29.200",
-      "port": 80,
-      "isActive": true,
-      "isRecording": false,
-      "mac_address": "00:14:D3:A6:1C:6F",
-      "device_type": "CAMERA",
-      "legacy_id": 256
-    },
-    {
-      "name": "192.168.29.10",
-      "host": "192.168.29.10",
-      "port": 80,
-      "isActive": true,
-      "isRecording": false,
-      "mac_address": "90:F4:21:50:00:2F",
-      "device_type": "Camera",
-      "legacy_id": 257
-    },
-    {
-      "name": "192.168.29.230",
-      "host": "192.168.29.230",
-      "port": 80,
-      "isActive": true,
-      "isRecording": false,
-      "mac_address": "18:74:E2:DA:69:BD",
-      "device_type": "Camera",
-      "legacy_id": 258
-    }
-  ]
+    "ip_cameras": [
+        {
+            "name": "192.168.29.200",
+            "host": "192.168.29.200",
+            "port": 80,
+            "isActive": false,
+            "isRecording": false,
+            "mac_address": "00:14:D3:A6:1C:6F",
+            "device_type": "Camera",
+            "legacy_id": 271
+        },
+        {
+            "name": "192.168.29.10",
+            "host": "192.168.29.10",
+            "port": 80,
+            "isActive": false,
+            "isRecording": false,
+            "mac_address": "90:F4:21:50:00:2F",
+            "device_type": "Audio",
+            "legacy_id": 272
+        },
+        {
+            "name": "192.168.29.203",
+            "host": "192.168.29.203",
+            "port": 8088,
+            "isActive": false,
+            "isRecording": false,
+            "mac_address": "18:74:E2:D1:96:89",
+            "device_type": "Camera",
+            "legacy_id": 273
+        },
+        {
+            "name": "192.168.29.204",
+            "host": "192.168.29.204",
+            "port": 8088,
+            "isActive": false,
+            "isRecording": false,
+            "mac_address": "18:74:E2:D1:96:91",
+            "device_type": "Camera",
+            "legacy_id": 274
+        }
+    ]
 }

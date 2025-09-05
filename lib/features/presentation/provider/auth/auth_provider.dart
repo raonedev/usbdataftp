@@ -3,7 +3,6 @@
 // auth_provider.dart
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
 import 'dart:developer' as dev;
 import 'package:flutter/material.dart';
@@ -34,7 +33,6 @@ class AuthResult {
   AuthResult({required this.success, this.error, this.user});
 }
 
-
 class AuthException implements Exception {
   final String message;
   final String? code;
@@ -45,9 +43,7 @@ class AuthException implements Exception {
   String toString() => 'AuthException: $message';
 }
 
-class NetworkException extends AuthException {
-  NetworkException(super.message) : super(code: 'NETWORK_ERROR');
-}
+
 
 class ValidationException extends AuthException {
   ValidationException(super.message) : super(code: 'VALIDATION_ERROR');
@@ -61,7 +57,6 @@ class SecurityUtils {
     final bytes = List<int>.generate(32, (i) => random.nextInt(256));
     return base64Url.encode(bytes);
   }
-
 
   // Validate input against common injection patterns
   static bool isInputSafe(String input) {
@@ -81,79 +76,9 @@ class SecurityUtils {
   }
 }
 
-// Network client with security configurations
-class SecureHttpClient {
-  late final http.Client _client;
-  final Duration _timeout;
-
-  SecureHttpClient({Duration timeout = const Duration(seconds: 30)})
-    : _timeout = timeout {
-    _client = http.Client();
-  }
-
-  Future<http.Response> post(
-    Uri url, {
-    Map<String, String>? headers,
-    Object? body,
-    Encoding? encoding,
-  }) async {
-    final secureHeaders = {
-      'Content-Type': 'application/json; charset=utf-8',
-      'Accept': 'application/json',
-      'User-Agent': 'SystemMonitorApp/1.0',
-      // Add CSRF token if available
-      ...?headers,
-    };
-
-    try {
-      final response = await _client
-          .post(url, headers: secureHeaders, body: body, encoding: encoding)
-          .timeout(_timeout);
-
-      dev.log('POST ${url.path} - Status: ${response.statusCode}');
-      return response;
-    } on TimeoutException {
-      throw NetworkException('Request timeout');
-    } on SocketException {
-      throw NetworkException('No internet connection');
-    } on HandshakeException {
-      throw NetworkException('SSL/TLS handshake failed');
-    } catch (e) {
-      throw NetworkException('Network error: ${e.toString()}');
-    }
-  }
-
-  Future<http.Response> get(Uri url, {Map<String, String>? headers}) async {
-    final secureHeaders = {
-      'Accept': 'application/json',
-      'User-Agent': 'SystemMonitorApp/1.0',
-      ...?headers,
-    };
-
-    try {
-      final response = await _client
-          .get(url, headers: secureHeaders)
-          .timeout(_timeout);
-      dev.log('GET ${url.path} - Status: ${response.statusCode}');
-      return response;
-    } on TimeoutException {
-      throw NetworkException('Request timeout');
-    } on SocketException {
-      throw NetworkException('No internet connection');
-    } on HandshakeException {
-      throw NetworkException('SSL/TLS handshake failed');
-    } catch (e) {
-      throw NetworkException('Network error: ${e.toString()}');
-    }
-  }
-
-  void dispose() {
-    _client.close();
-  }
-}
 
 // Main Authentication Provider
-class AuthProvider with ChangeNotifier {  
+class AuthProvider with ChangeNotifier {
   // static final _logger = Logger('AuthProvider');
 
   // OWASP Mobile Security - Secure storage configuration
@@ -183,20 +108,21 @@ class AuthProvider with ChangeNotifier {
   User? _user;
   Timer? _tokenRefreshTimer;
   Timer? _inactivityTimer;
-  final SecureHttpClient _httpClient;
+  String _errorMessage="";
+  String get errorMessage => _errorMessage;
 
   // Configuration
-  String _baseUrl="";
+  String _baseUrl = "";
   String get baseUrl => _baseUrl;
-  set baseUrl(String url){
-    _baseUrl= url;
+  set baseUrl(String url) {
+    _baseUrl = url;
     notifyListeners();
   }
 
-  final Duration _sessionTimeout=const Duration(minutes: 30);
-  final Duration _tokenRefreshBuffer =  const Duration(minutes: 5);
+  final Duration _sessionTimeout = const Duration(minutes: 30);
+  final Duration _tokenRefreshBuffer = const Duration(minutes: 5);
 
-  AuthProvider() :_httpClient = SecureHttpClient() {
+  AuthProvider() {
     initializeAuth();
   }
 
@@ -239,7 +165,11 @@ class AuthProvider with ChangeNotifier {
   }
 
   // Login method with input validation and security checks
-  Future<AuthResult> login(String username, String password) async {
+  Future<AuthResult> login(
+    BuildContext context,
+    String username,
+    String password,
+  ) async {
     try {
       // Input validation
       if (username.isEmpty || password.isEmpty) {
@@ -264,6 +194,8 @@ class AuthProvider with ChangeNotifier {
       }
 
       _setLoading(true);
+      // final res = await http.get(Uri.parse('$baseUrl/health'));
+
 
       final url = Uri.parse('$baseUrl/auth/login');
       final body = jsonEncode({
@@ -271,9 +203,18 @@ class AuthProvider with ChangeNotifier {
         'password': password,
       });
 
-      dev.log('Attempting login for user');
 
-      final response = await _httpClient.post(url, body: body);
+
+      dev.log('Attempting login for user');
+     
+
+      final response = await http.post(url, body: body,headers: {
+        'Content-Type': 'application/json',
+      });
+      _errorMessage= "${response.statusCode} ${response.body}";
+      //  ScaffoldMessenger.of(
+      //   context,
+      // ).showSnackBar(SnackBar(content: Text(response.body)));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -323,6 +264,13 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  Future<void> mockLogin(String username, String password) async {
+    _setLoading(true);
+    await Future.delayed(Duration(seconds: 2));
+    _isAuthenticated = true;
+    _setLoading(false);
+  }
+
   // Token refresh method
   Future<bool> refreshToken() async {
     try {
@@ -332,13 +280,14 @@ class AuthProvider with ChangeNotifier {
       }
 
       final url = Uri.parse('$baseUrl/auth/refresh');
-      final response = await _httpClient.post(
+      final response = await http.post(
         url,
-        headers: {'Authorization': 'Bearer $currentToken'},
+        headers: {'Authorization': 'Bearer $currentToken','Content-Type': 'application/json',},
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        dev.log("refreshing res 200");
         final newToken = data['token'] as String;
         final expiresIn = data['expiresIn'] as int? ?? 1800;
 
@@ -346,7 +295,7 @@ class AuthProvider with ChangeNotifier {
         await _secureStorage.write(key: _tokenKey, value: newToken);
         await _storeTokenExpiry(expiresIn);
         await _updateLastActivity();
-
+        dev.log("store new token");
         _startTokenRefreshTimer();
         // _logger.info('Token refreshed successfully');
         return true;
@@ -402,7 +351,7 @@ class AuthProvider with ChangeNotifier {
     try {
       return await _secureStorage.read(key: _tokenKey);
     } catch (e) {
-      dev.log('Error reading auth token: ',error: e);
+      dev.log('Error reading auth token: ', error: e);
       return null;
     }
   }
@@ -443,7 +392,7 @@ class AuthProvider with ChangeNotifier {
     try {
       return await _secureStorage.read(key: _tokenKey);
     } catch (e) {
-      dev.log('Error reading stored token:',error: e);
+      dev.log('Error reading stored token:', error: e);
       return null;
     }
   }
@@ -456,7 +405,7 @@ class AuthProvider with ChangeNotifier {
       }
       return null;
     } catch (e) {
-      dev.log('Error reading stored user data:',error: e);
+      dev.log('Error reading stored user data:', error: e);
       return null;
     }
   }
@@ -498,10 +447,11 @@ class AuthProvider with ChangeNotifier {
     _tokenRefreshTimer?.cancel();
 
     // Refresh token 5 minutes before expiry
-    final refreshTime = Duration(seconds: 1800) - _tokenRefreshBuffer;
-
+    final refreshTime = Duration(minutes: 30) - _tokenRefreshBuffer;
+    dev.log("timer starts");
     _tokenRefreshTimer = Timer(refreshTime, () async {
       if (_isAuthenticated) {
+        dev.log("refreshing buffer");
         await refreshToken();
       }
     });
@@ -541,55 +491,6 @@ class AuthProvider with ChangeNotifier {
   void dispose() {
     _tokenRefreshTimer?.cancel();
     _inactivityTimer?.cancel();
-    _httpClient.dispose();
     super.dispose();
   }
 }
-
-// Usage example in main.dart:
-/*
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:logging/logging.dart';
-
-void main() {
-  // Configure logging
-  Logger.root.level = Level.ALL;
-  Logger.root.onRecord.listen((record) {
-    print('${record.level.name}: ${record.time}: ${record.message}');
-  });
-  
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(
-          create: (_) => AuthProvider(
-            baseUrl: 'http://your-server-url:3000',
-          ),
-        ),
-      ],
-      child: MaterialApp(
-        title: 'System Monitor',
-        home: Consumer<AuthProvider>(
-          builder: (context, auth, _) {
-            if (auth.isLoading) {
-              return Scaffold(
-                body: Center(child: CircularProgressIndicator()),
-              );
-            }
-            
-            return auth.isAuthenticated 
-                ? DashboardScreen() 
-                : LoginScreen();
-          },
-        ),
-      ),
-    );
-  }
-}
-*/
