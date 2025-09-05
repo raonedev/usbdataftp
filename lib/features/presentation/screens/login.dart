@@ -38,7 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _checkAndShowDialog() {
-    if (!startUpAppProvider.isUsbTethering &&!startUpAppProvider.isDeviceTethering && !isDialogShown) {
+    if (!startUpAppProvider.isUsbTethering && !startUpAppProvider.isDeviceTethering && !isDialogShown) {
       isDialogShown = true;
 
       showDialog(
@@ -272,8 +272,7 @@ class _PortraitViewState extends State<PortraitView> {
                   onPressed: widget.authProvider.isLoading
                       ? null
                       : () async {
-                          if (usernameController.text.isEmpty ||
-                              passwordController.text.isEmpty) {
+                          if (usernameController.text.isEmpty || passwordController.text.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
