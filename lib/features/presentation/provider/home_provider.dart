@@ -3,6 +3,7 @@ import 'dart:developer' as dev;
 
 import 'package:flutter/material.dart';
 import '../../../core/helper.dart';
+
 class StartUpAppProvider extends ChangeNotifier {
   static const Duration _retryDelay = Duration(seconds: 3);
 
@@ -53,7 +54,7 @@ class StartUpAppProvider extends ChangeNotifier {
           continue;
         }
 
-        break; 
+        break;
       } catch (e, s) {
         dev.log("Connection attempt failed", error: e, stackTrace: s);
         await _waitBeforeRetry();
@@ -146,6 +147,19 @@ class StartUpAppProvider extends ChangeNotifier {
   Future<void> _waitBeforeRetry() async {
     dev.log("Retrying connection in ${_retryDelay.inSeconds} seconds...");
     await Future.delayed(_retryDelay);
+  }
+
+  void resetAndRetry() {
+    dev.log("Resetting connection state and retrying...");
+    _isUsbTethering = false;
+    _isMobileTetheringIpFound = false;
+    _mobileTetheringIp = null;
+    _isDeviceTethering = false;
+    _deviceTetheringIP = null;
+    notifyListeners();
+    Future.delayed(Duration(seconds: 2), () {
+      initialized();
+    });
   }
 
   @override

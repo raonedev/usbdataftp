@@ -4,12 +4,14 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:usbdataftptest/features/data/models/recordings_model.dart';
 
+import '../../../../core/helper.dart';
 import '../../../data/models/camera_status_model.dart';
+import '../../../data/models/recordings_model.dart';
 import '../../../data/models/sys_info_model.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+
 
 enum IpCamerasState { loading, sucess, failed, none }
 
@@ -37,8 +39,7 @@ class GetSysInfoFileManagement extends ChangeNotifier {
 
   /// getter
   /// -> data
-  List<SystemInfoModel> get systemInfoModel =>
-      List.unmodifiable(_systemInfoModel);
+  List<SystemInfoModel> get systemInfoModel => List.unmodifiable(_systemInfoModel);
   IpCameras? get ipCameras => _ipCameras;
   AllRecordingsFiles? get allRecordingsFiles => _allRecordingsFiles;
 
@@ -57,8 +58,8 @@ class GetSysInfoFileManagement extends ChangeNotifier {
 
   StreamSubscription<String>? _subscription;
 
-  final bool _isConencted = true;
-  bool get isConencted => _isConencted;
+  bool _isIPConencted = true;
+  bool get isIPConencted => _isIPConencted;
 
   Future<void> connectToSysInfoStream({
     required String baseUrl,
@@ -145,6 +146,7 @@ class GetSysInfoFileManagement extends ChangeNotifier {
       dev.log('Connection error: $e'); // Debug log
       _sysInfoErrorMessage = e.toString();
       _getSysInfoState = GetSysInfoState.failed;
+      _isIPConencted= await checkPing(baseUrl: baseUrl);
       notifyListeners();
     }
   }
@@ -251,7 +253,7 @@ class GetSysInfoFileManagement extends ChangeNotifier {
     required String baseUrl,
     required String token,
   }) async {
-    final url = Uri.parse("$baseUrl/getcameras");
+   final url = Uri.parse("$baseUrl/getcameras");
 
     try {
       final response = await http
@@ -278,6 +280,7 @@ class GetSysInfoFileManagement extends ChangeNotifier {
       dev.log("geting camera error", error: e);
       _ipCamerasErrorMessage = e.toString();
       _ipCamerasState = IpCamerasState.failed;
+      _isIPConencted= await checkPing(baseUrl: baseUrl);
       notifyListeners();
     }
   }
@@ -337,6 +340,7 @@ class GetSysInfoFileManagement extends ChangeNotifier {
     } catch (e) {
       _recordingFileError = e.toString();
       _recordingFileState = RecordingFileState.failed;
+      _isIPConencted= await checkPing(baseUrl: baseUrl);
       notifyListeners();
     }
   }

@@ -8,6 +8,10 @@ import 'dart:developer' as dev;
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+import 'package:usbdataftptest/core/helper.dart';
+
+import '../home_provider.dart';
 
 // Models
 class User {
@@ -43,8 +47,6 @@ class AuthException implements Exception {
   String toString() => 'AuthException: $message';
 }
 
-
-
 class ValidationException extends AuthException {
   ValidationException(super.message) : super(code: 'VALIDATION_ERROR');
 }
@@ -75,7 +77,6 @@ class SecurityUtils {
     return !dangerousPatterns.any((pattern) => pattern.hasMatch(input));
   }
 }
-
 
 // Main Authentication Provider
 class AuthProvider with ChangeNotifier {
@@ -108,7 +109,7 @@ class AuthProvider with ChangeNotifier {
   User? _user;
   Timer? _tokenRefreshTimer;
   Timer? _inactivityTimer;
-  String _errorMessage="";
+  String _errorMessage = "";
   String get errorMessage => _errorMessage;
 
   // Configuration
@@ -170,6 +171,7 @@ class AuthProvider with ChangeNotifier {
     String username,
     String password,
   ) async {
+    final startUpProvider = context.read<StartUpAppProvider>();
     try {
       // Input validation
       if (username.isEmpty || password.isEmpty) {
@@ -196,26 +198,26 @@ class AuthProvider with ChangeNotifier {
       _setLoading(true);
       // final res = await http.get(Uri.parse('$baseUrl/health'));
 
-
       final url = Uri.parse('$baseUrl/auth/login');
       final body = jsonEncode({
         'username': username.trim().toLowerCase(),
         'password': password,
       });
-
-
+      dev.log('checking connection with device');
+      if(!(await checkPing(baseUrl: baseUrl))){
+        startUpProvider.resetAndRetry();
+        throw AuthException('Connection LOST: ${e.toString()}');
+      }
 
       dev.log('Attempting login for user');
-     
+      
 
-      final response = await http.post(url, body: body,headers: {
-        'Content-Type': 'application/json',
-      });
-      _errorMessage= "${response.statusCode} ${response.body}";
-      //  ScaffoldMessenger.of(
-      //   context,
-      // ).showSnackBar(SnackBar(content: Text(response.body)));
-
+      final response = await http.post(
+        url,
+        body: body,
+        headers: {'Content-Type': 'application/json'},
+      );
+      _errorMessage = "${response.statusCode} ${response.body}";
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
@@ -226,8 +228,7 @@ class AuthProvider with ChangeNotifier {
 
         final token = data['token'] as String;
         final userData = User.fromJson(data['user']);
-        final expiresIn =
-            data['expiresIn'] as int? ?? 1800; // Default 30 minutes
+        final expiresIn = data['expiresIn'] as int? ?? 1800; // Default 30 minutes
 
         // Store authentication data securely
         await _storeAuthData(token, userData, expiresIn);
@@ -282,7 +283,10 @@ class AuthProvider with ChangeNotifier {
       final url = Uri.parse('$baseUrl/auth/refresh');
       final response = await http.post(
         url,
-        headers: {'Authorization': 'Bearer $currentToken','Content-Type': 'application/json',},
+        headers: {
+          'Authorization': 'Bearer $currentToken',
+          'Content-Type': 'application/json',
+        },
       );
 
       if (response.statusCode == 200) {

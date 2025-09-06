@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
@@ -23,11 +25,11 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     startUpAppProvider = context.read<StartUpAppProvider>();
-    // startUpAppProvider.addListener(_checkAndShowDialog);
-    // startUpAppProvider.initialized();
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   _checkAndShowDialog();
-    // });
+    startUpAppProvider.addListener(_checkAndShowDialog);
+    startUpAppProvider.initialized();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAndShowDialog();
+    });
   }
 
   ///df --output=used /dev/${diskName}* | tail -n 1
@@ -130,33 +132,21 @@ class _LoginScreenState extends State<LoginScreen> {
                               SizedBox(height: 16),
                               AnimatedTurnOnButton(
                                 // onPressed: () => openUsbTetherSettings(),
-                                onPressed: () {
-                                  openUsbTetherSettings();
-                                  Navigator.pop(context);
+                                onPressed: () async{
+                                  Navigator.of(context).pop();
                                   isDialogShown = false;
+                                  await openUsbTetherSettings();
+                                  startUpAppProvider.resetAndRetry();
                                 },
                               ),
                             ],
-                            if (startUpProvider.isUsbTethering &&
-                                !startUpProvider.isDeviceTethering)
+                            if (startUpProvider.isUsbTethering && !startUpProvider.isDeviceTethering)
                               Text(
                                 'Authenticating & Searching Device...\nIt generaly take less than 1 minute.',
                                 textAlign: TextAlign.center,
                                 style: Theme.of(context).textTheme.labelSmall
                                     ?.copyWith(color: Colors.black54),
                               ),
-                            // if (loginProvider.ftpConnectionState == FtpConnectionState.loading)
-                            //   Text('Recoznizing device...'),
-                            // if (loginProvider.ftpConnectionState == FtpConnectionState.failed)
-                            //   Text(
-                            //     'Failed to make connection\nRetrying...',
-                            //     textAlign: TextAlign.center,
-                            //     style: Theme.of(context).textTheme.labelSmall
-                            //         ?.copyWith(
-                            //           color: Colors.red,
-                            //           fontWeight: FontWeight.bold,
-                            //         ),
-                            //   ),
                           ],
                         ),
                       ),
@@ -281,28 +271,28 @@ class _PortraitViewState extends State<PortraitView> {
                               ),
                             );
                           } 
-                          // else if (!context
-                          //     .read<StartUpAppProvider>()
-                          //     .isDeviceTethering) {
-                          //   ScaffoldMessenger.of(context).showSnackBar(
-                          //     SnackBar(
-                          //       content: Text(
-                          //         "Please wait for making connection.",
-                          //       ),
-                          //     ),
-                          //   );
-                          // } 
+                          else if (!context
+                              .read<StartUpAppProvider>()
+                              .isDeviceTethering) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  "Please wait for making connection.",
+                                ),
+                              ),
+                            );
+                          }
                           else {
                             try {
-                              // await widget.authProvider.login(
-                              //   context,
-                              //   usernameController.text.trim(),
-                              //   passwordController.text.trim(),
-                              // );
-                              await widget.authProvider.mockLogin(
+                              await widget.authProvider.login(
+                                context,
                                 usernameController.text.trim(),
                                 passwordController.text.trim(),
                               );
+                              // await widget.authProvider.mockLogin(
+                              //   usernameController.text.trim(),
+                              //   passwordController.text.trim(),
+                              // );
                               if (widget.authProvider.isAuthenticated) {
                                 if (!context.mounted) return;
                                 Navigator.pushReplacement(

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:usbdataftptest/features/presentation/screens/login.dart';
 import '../provider/auth/auth_provider.dart';
 import '../provider/auth/get_sys_info_file_management.dart';
 import 'homescreen.dart';
@@ -32,25 +33,24 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
     final authProvider = context.read<AuthProvider>();
     final getSysInfoFileManagement = context.read<GetSysInfoFileManagement>();
     baseUrl = authProvider.baseUrl;
-    // token = await authProvider.getAuthToken();
-    // getSysInfoFileManagement.connectToSysInfoStream(
-    //   baseUrl: baseUrl,
-    //   token: token!,
-    // );
-    // getSysInfoFileManagement.fetchIpCameras(
-    //     baseUrl: baseUrl,
-    //     token: token!
-    //   );
-    getSysInfoFileManagement.fetchMockCameras();
-    getSysInfoFileManagement.connectToSysInfoStreamMock();
-     _fetchTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      // Call your method here
-      // getSysInfoFileManagement.fetchIpCameras(
-      //   baseUrl: baseUrl,
-      //   token: token!
-      // );
-      getSysInfoFileManagement.fetchMockCameras();
-    });
+    token = await authProvider.getAuthToken();
+    if (token != null) {
+      getSysInfoFileManagement.connectToSysInfoStream(
+        baseUrl: baseUrl,
+        token: token!,
+      );
+      getSysInfoFileManagement.fetchIpCameras(baseUrl: baseUrl, token: token!);
+      // getSysInfoFileManagement.fetchMockCameras();
+      // getSysInfoFileManagement.connectToSysInfoStreamMock();
+      _fetchTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+        // Call your method here
+        getSysInfoFileManagement.fetchIpCameras(
+          baseUrl: baseUrl,
+          token: token!,
+        );
+        // getSysInfoFileManagement.fetchMockCameras();
+      });
+    }
   }
 
   @override
@@ -62,6 +62,20 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
   @override
   Widget build(BuildContext context) {
     final loginProvider = context.watch<StartUpAppProvider>();
+    final getSysInfoFileManagement = context.watch<GetSysInfoFileManagement>();
+
+    /// while running connection got disconnected then go to login screen
+    if (getSysInfoFileManagement.isIPConencted == false) {
+      _fetchTimer?.cancel();
+      context.read<GetSysInfoFileManagement>().disconnectStream();
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+        );
+      });
+    }
 
     return Scaffold(
       backgroundColor: Color(0xFFF5F5F5),
